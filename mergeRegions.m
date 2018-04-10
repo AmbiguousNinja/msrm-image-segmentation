@@ -1,42 +1,36 @@
-function [newImageRegions, newRegionCount, newRegions] = mergeRegions(imageRegions, regionCount, regions)
+% Merges regions marked for merging and removes merged regions
+function [newImageRegions, cnt, newRegions] = mergeRegions(imageRegions, regionCount, regions)
     newImageRegions = zeros(size(imageRegions));
     
-    k = 0;
+    cnt = 0;
     
     for (i = 1:regionCount)
-        if regions(i).stat == 0
-            k = k+1;
-            ind = find(imageRegions==i);   % Replace all region i in Label (I) with the new region counter, k
-            newImageRegions(ind)=k;
-
-            newRegions(k).hist = regions(i).hist;
-            newRegions(k).type = regions(i).type;
-            newRegions(k).area = regions(i).area;
+        if regions(i).stat <= 0
+            cnt = cnt + 1;
             
-            newRegions(k).stat = 0;
-        elseif regions(i).stat == -1
-            k=k+1;
-            ind=find(imageRegions==i);
-            newImageRegions(ind)=k;
-
-            newRegions(k).hist = regions(i).hist;
-            newRegions(k).type = regions(i).type;
-            newRegions(k).area = regions(i).area;
-            newRegions(k).stat = 0;
+            % Replace all region i in imageRegions with the new region index
+            idxs = find(imageRegions == i);
+            newImageRegions(idxs) = cnt;
             
-            for j=1:regionCount
-                % Merge the regions
-                if regions(j).stat == i
-                    ind = find(imageRegions==j);
-                    newImageRegions(ind)=k;
+            % Transfer existing region information
+            newRegions(cnt).hist = regions(i).hist;
+            newRegions(cnt).type = regions(i).type;
+            newRegions(cnt).area = regions(i).area;
+            newRegions(cnt).stat = 0;
+            
+            % Merge marked regions
+            if regions(i).stat < 0
+                for j=1:regionCount
+                    if regions(j).stat == i
+                        idxs = find(imageRegions==j);
+                        newImageRegions(idxs)=cnt;
 
-                    newRegions(k).hist = newRegions(k).hist + regions(j).hist;
-                    newRegions(k).type = max(newRegions(k).type, regions(j).type);
-                    newRegions(k).area = newRegions(k).area + regions(j).area;
+                        newRegions(cnt).hist = newRegions(cnt).hist + regions(j).hist;
+                        newRegions(cnt).type = max(newRegions(cnt).type, regions(j).type);
+                        newRegions(cnt).area = newRegions(cnt).area + regions(j).area;
+                    end
                 end
             end
-        end        
+        end
     end
-    
-    newRegionCount = k;
 end

@@ -1,5 +1,5 @@
 % Marks regions for merging
-function newRegions = markForMerging(i, j, regions, regionCount)
+function newRegions = mark(i, j, regions, regionCount)
     if (i > j)
         [j, i] = deal(i, j);
     end
