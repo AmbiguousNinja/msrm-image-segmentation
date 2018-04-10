@@ -82,7 +82,7 @@ MARK_SUFFIX = <span class="string">'_marked.png'</span>;
 
 BIN_SIZE = 256/16;   <span class="comment">% 16*16*16 = 4096 bins</span>
 
-image_names = {<span class="string">'bird'</span>, <span class="string">'woman'</span>};
+image_names = {<span class="string">'bird'</span>};
 </pre><p>Run MSRM segmentation for each image set</p><pre class="codeinput"><span class="keyword">for</span> (name = image_names)
 </pre><pre class="codeinput">    image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
     imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
@@ -91,8 +91,24 @@ image_names = {<span class="string">'bird'</span>, <span class="string">'woman'<
     h = size(image, 1);
     w = size(image, 2);
 </pre><p><b>Image Preparation</b></p><pre class="codeinput">    imageRegions   = labelRegions(imageSeg, h, w);
-    imageMarked    = labelSets(imageMark, h, w);
-</pre><p><b>Image Quantization</b></p><pre class="codeinput">    imageQuantized = size(image);
+</pre><p><b>User Marked Image</b></p><p>Takes a user-marked image and assigns pixels to a set * 2: Object (Mo) * 1: Background (Mb)</p><pre class="codeinput">    imageMarked = zeros(h, w);
+
+    g = zeros(1,1,3);
+    b = zeros(1,1,3);
+
+    g(:,:,:) = [0 255 0];   <span class="comment">% Green</span>
+    b(:,:,:) = [0 0 255];   <span class="comment">% Blue</span>
+
+    <span class="keyword">for</span> (i = 1:h)
+        <span class="keyword">for</span> (j = 1:w)
+            <span class="keyword">if</span> (imageMark(i, j, :) == g)
+                imageMarked(i, j) = 2;
+            <span class="keyword">elseif</span> (imageMark(i, j, :) == b)
+                imageMarked(i, j) = 1;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+</pre><p><b>Image Quantization</b></p><pre class="codeinput">    imageQuantized = size(h, w);
 
     <span class="keyword">for</span> (i = 1:h)
         <span class="keyword">for</span> (j = 1:w)
@@ -162,13 +178,9 @@ image_names = {<span class="string">'bird'</span>, <span class="string">'woman'<
         tmp(idxs) = 255;
         extractedImage(:, :, i) = tmp;
     <span class="keyword">end</span>
-</pre><h2 id="19">Visualization of Results</h2><pre class="codeinput">    figure;
-    imshow(image);
-<span class="comment">%     figure;</span>
-    imshow(imageMark);
-<span class="comment">%     figure;</span>
-    imshow(extractedImage);
-</pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <img vspace="5" hspace="5" src="main_02.png" alt=""> <pre class="codeinput"><span class="keyword">end</span>
+</pre><h2 id="19">Visualization of Results</h2><pre>   figure; imshow(image);
+   figure; imshow(imageMark);</pre><pre class="codeinput">    figure; imshow(extractedImage);
+</pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <pre class="codeinput"><span class="keyword">end</span>
 </pre><h2 id="21">Analysis &amp; Conclusions</h2><p>[talk about results, limits etc]</p><h2 id="22">Source Code</h2><p>[list functions]</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% ECE 417 Project: Replication of Maximal Similarity Based Region Merging (MSRM)
@@ -190,8 +202,6 @@ image_names = {<span class="string">'bird'</span>, <span class="string">'woman'<
 %% Solution
 % [necessary details on structure of algorithm
 % 
-
-%%
 %   function adjMatrix = calculateSimilarities(adjMatrix, regions)
 %       [i, j, ~] = find(adjMatrix);
 %     
@@ -220,7 +230,7 @@ MARK_SUFFIX = '_marked.png';
 
 BIN_SIZE = 256/16;   % 16*16*16 = 4096 bins
 
-image_names = {'bird', 'woman'};
+image_names = {'bird'};
 
 %% 
 % Run MSRM segmentation for each image set
@@ -235,11 +245,35 @@ for (name = image_names)
     %% 
     % *Image Preparation*
     imageRegions   = labelRegions(imageSeg, h, w);
-    imageMarked    = labelSets(imageMark, h, w);
 
+    %%
+    % *User Marked Image*
+    %
+    % Takes a user-marked image and assigns pixels to a set
+    % * 2: Object (Mo)
+    % * 1: Background (Mb)
+    %
+    imageMarked = zeros(h, w);
+    
+    g = zeros(1,1,3);
+    b = zeros(1,1,3);
+    
+    g(:,:,:) = [0 255 0];   % Green
+    b(:,:,:) = [0 0 255];   % Blue
+    
+    for (i = 1:h)
+        for (j = 1:w)
+            if (imageMark(i, j, :) == g)
+                imageMarked(i, j) = 2;
+            elseif (imageMark(i, j, :) == b)
+                imageMarked(i, j) = 1;
+            end
+        end
+    end
+    
     %% 
     % *Image Quantization*
-    imageQuantized = size(image);
+    imageQuantized = size(h, w);
 
     for (i = 1:h)
         for (j = 1:w)
@@ -260,7 +294,7 @@ for (name = image_names)
     regions      = createRegions(imageRegions, imageQuantized, imageMarked, h, w, regionCount);
     adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
     similarities = calculateSimilarities(adjMatrix, regions);
-
+    
     while 1
         merged = 0;
 
@@ -333,12 +367,9 @@ for (name = image_names)
     end
 
     %% Visualization of Results
-    figure;
-    imshow(image);
-%     figure;
-    imshow(imageMark);
-%     figure;
-    imshow(extractedImage);
+%     figure; imshow(image);
+%     figure; imshow(imageMark);
+    figure; imshow(extractedImage);
 end
 
 %% Analysis & Conclusions
