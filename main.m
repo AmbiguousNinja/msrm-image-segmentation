@@ -6,28 +6,22 @@ close all;
 image       = imread('bird.bmp');
 imageSeg    = imread('bird_seg.png');
 imageMarked = imread('bird_marked2.png');
-% image       = imread('goose.png');
-% imageSeg    = imread('goose_seg.png');
-% imageMarked = imread('goose_marked.png');
 
-imageH = size(image, 1);
-imageW = size(image, 2);
+h = size(image, 1);
+w = size(image, 2);
 
 %% Image Preparation
-imageRegions   = labelRegions(imageSeg, imageH, imageW);
-imageMarked    = labelSets(imageMarked, imageH, imageW);
-imageQuantized = quantizeImage(image, imageH, imageW);
+imageRegions   = labelRegions(imageSeg, h, w);
+imageMarked    = labelSets(imageMarked, h, w);
+imageQuantized = quantizeImage(image, h, w);
 
-imshow(drawSegments(image, imageRegions,imageH, imageW));
-% waitforbuttonpress
-% imwrite(drawSegments(image, imageRegions), 'output/segmentedImage.png');
+% imwrite(drawSegments(image, imageRegions,h, w), 'output/segmentedImage.png');
 
 %% Intialize Regions
 regionCount = max(imageRegions(:));
 
-regions   = createRegions(imageRegions, imageQuantized, imageMarked, imageH, imageW, regionCount);
-adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, imageH, imageW);
-mergeTable = -1 * ones(1, regionCount);     % TODO - reimplement
+regions   = createRegions(imageRegions, imageQuantized, imageMarked, h, w, regionCount);
+adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
 
 %% Merging
 while 1
@@ -51,7 +45,7 @@ for (i=1:regionCount)
         imageResult(find(imageRegions==i))=1;
     end
 end
-
-imageExtracted = drawSegments(image, imageResult, imageH, imageW);
+% imwrite(imageResult, 'output/imageMask.png');
+imageExtracted = drawSegments(image, imageResult, h, w);
 % imwrite(imageExtracted, 'output/imageExtracted.png');
 imshow(imageExtracted)

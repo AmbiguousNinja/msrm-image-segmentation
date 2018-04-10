@@ -1,10 +1,8 @@
  function [merged, adjMatrix, imageRegions, regionCount, regions] = mergingStage(adjMatrix, imageRegions, regionCount, regions, type)
     merged = 0;
-    
-%     mergeTable = -1*ones(1, regionCount);
-    
-    imageH = size(imageRegions, 1);
-    imageW = size(imageRegions, 2);
+
+    h = size(imageRegions, 1);
+    w = size(imageRegions, 2);
 
     while 1
         flag = 0;
@@ -19,8 +17,6 @@
                     [~, idx] = max(adjMatrix(j,:));
 
                     if i == idx
-%                         mergeTable = MergeRecord(mergeTable, i, j,regionCount);
-
                         regions = markForMerging(i, j, regions, regionCount);
                         
                         flag = 1;
@@ -35,9 +31,7 @@
         end
         
         % Merging post processing
-%         [imageRegions, regionCount, regions] = MergePostProc2(imageRegions, mergeTable, regionCount, regions);
         [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-        adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, imageH, imageW);
-%         mergeTable = -1*ones(1, regionCount);
+        adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
     end
 end
