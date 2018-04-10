@@ -7,7 +7,6 @@ function regions = createRegions(imageRegions, quantizedImage, imageMarked, h, w
         regions(rgnIdx).area = 0;
         regions(rgnIdx).type = 0;    % 0: non-marked (N), 1: background (Mb), 2: object (Mo)
         regions(rgnIdx).hist = zeros(binCount, 1);
-        
         regions(rgnIdx).stat = 0';
     end
     

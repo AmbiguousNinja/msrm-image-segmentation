@@ -4,7 +4,7 @@ function imageRegions = labelRegions(imgSeg, h, w)
     temp    = bwlabel(binImg);
 
     imageRegions = temp;
- 
+    
     % Populate 0s with neighboring value
     while (isempty(find(imageRegions == 0, 1)) == 0)
         for (i = 1:h)
