@@ -96,24 +96,23 @@
 %           maxIdx = -1;
 %         
 %           % Find the most similar region adjacent to the adjacent region. 
-%             for l = 1:size(i, 1)
-%                 if j(l) == i(l)
-%                     continue;
-%                 end
+%           for l = 1:size(i, 1)
+%               if j(l) == i(l)
+%                   continue;
+%               end
 %             
-%                 if j(l) == rgn2 && v(l) > max
-%                     max = v(l);
-%                     maxIdx = i(l);
-%                 end
-%             end
+%               if j(l) == rgn2 && v(l) > max
+%                   max = v(l);
+%                   maxIdx = i(l);
+%               end
+%           end
 %         
-%             % If the most similar region is our initial region, mark the
-%             % regions for merging
-%             if rgn1 == maxIdx
-%                 regions = mark(rgn1, rgn2, regions, regionCount);
-%                 marked = 1;
-%             end
-%         end
+%           % If the most similar region is our initial region, mark the regions for merging
+%           if rgn1 == maxIdx
+%               regions = mark(rgn1, rgn2, regions, regionCount);
+%               marked = 1;
+%           end
+%       end
 %   end
 %
 %%
@@ -124,7 +123,7 @@
 % Regions have 3 fields that are merged:
 %
 % * hist: the two regions' histograms are summed (element-wise)
-% * type: the only valid types are 0 or 1 in regions that are merged. Regions of that represent the object (2, Mo) are never merged
+% * type: the only valid types are 0 or 1 in regions that are merged. Regions of that represent the object (2, $M_O$) are never merged
 % * area: the two regions' area are summed
 %%
 %   idxs = find(imageRegions==j);   % Find all indices of region j
@@ -187,8 +186,8 @@ for (name = image_names)
     %
     % Takes a user-marked image and assigns pixels to a set
     %
-    % * 2: Object (Mo)
-    % * 1: Background (Mb)
+    % * 2: Object ($M_O$)
+    % * 1: Background ($M_B$)
     %
     imageMarked = zeros(h, w);
 
@@ -229,7 +228,7 @@ for (name = image_names)
     %
     % Each entry in regions stores properties of a region
     % 
-    % * Region Type: 0: non-marked (N), 1: background (Mb), 2: object (Mo)
+    % * Region Type: 0: non-marked ($N$), 1: background ($M_B$), 2: object ($M_O$)
     %
     regionCount = max(imageRegions(:));    
     binCount = max(imageQuantized(:));
@@ -268,9 +267,10 @@ for (name = image_names)
         %% 
         % *Merging Stage 1*
         %
-        % Merge members of Mb (type = 1) with members of N (type = 0)
+        % Merge members of $M_B$ (type = 1) with members of $N$ (type = 0)
         %
         % Repeat until no merging occurs.
+        %
         while 1
             [regions, marked] = markRegions(similarities, regions, regionCount, 1);
 
@@ -291,11 +291,12 @@ for (name = image_names)
         %% 
         % *Merging Stage 2*
         %
-        % Merge members of N (type = 0) with other members of N
+        % Merge members of $N$(type = 0) with other members of $N$
         %
         % Repeat until no merging occurs.
         %
         % Identical to Stage 1 except we look for type == 0 instead of type == 1
+        %
         while 1
             [regions, marked] = markRegions(similarities, regions, regionCount, 0);
 
@@ -361,4 +362,3 @@ end
 %
 %% Source Code
 % * all source code and utilized functions are packaged with submission
-% * utilization of methods from 

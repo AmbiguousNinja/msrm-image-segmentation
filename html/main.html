@@ -66,10 +66,10 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>ECE 417 Project: Replication of Maximal Similarity Based Region Merging (MSRM)</h1><!--introduction--><p><i>Hui Wu</i></p><p><i>20515692</i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Problem Formulation</a></li><li><a href="#2">Proposed Solution</a></li><li><a href="#3">Data Sources</a></li><li><a href="#4">Solution</a></li><li><a href="#25">Visualization of Results</a></li><li><a href="#27">Analysis &amp; Conclusions</a></li><li><a href="#28">Source Code</a></li></ul></div><h2 id="1">Problem Formulation</h2><p>One usecase of image segmentation is to separate an object from the background in an image. There are many solutions to segment an image. However, for natural images, full segmentation is often difficult.</p><p>The goal of this method is to use minimally labeled information from a user to merge like regions together.</p><h2 id="2">Proposed Solution</h2><p>To begin, an image and its segmentation is prepared by using an existing segmentation method (in the case of the paper, mean-shift is used).</p><p>Afterwards, the regions are labelled with green or blue lines indicating "object" and "background" segments respectively.</p><p>Using the user labelled data, regions are placed into one of three sets:</p><div><ul><li><img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;"> (Object)</li><li><img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;"> (Background)</li><li><img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> (Unmarked)</li></ul></div><p>Each colour channel is then uniformly quantized into 16 levels (4096 total bins). Then the histogram of each region can be calculated.</p><p>To define a score between adjacent regions, the Bhattacharrya coefficient is used (higher score = higher similarity)</p><p><img src="main_eq10245652828650097980.png" alt="$\rho (A, B) = \sum_{u=1}^{4096} \sqrt{\textrm{Hist}_{A}^{u} \cdot \textrm{Hist}_{B}^{u}}$" style="width:152px;height:15px;"></p><p><b>Merging Stage 1</b></p><p>For every region <img src="main_eq14005776071659101873.png" alt="$A \in M_B$" style="width:38px;height:10px;">, check its adjacent regions, <img src="main_eq13610995001725925283.png" alt="$B \in N$" style="width:32px;height:9px;">. If <img src="main_eq05147331747641807187.png" alt="$A$" style="width:8px;height:8px;"> is the most similar region adjacent to <img src="main_eq10170753361147586657.png" alt="$B$" style="width:9px;height:8px;">, merge the regions. Therefore  <img src="main_eq14005776071659101873.png" alt="$A \in M_B$" style="width:38px;height:10px;">, <img src="main_eq15790362022125325304.png" alt="$B \in M_B$" style="width:39px;height:10px;"></p><p>This process is repeated until no more merging occurs (<img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;"> does not increase and <img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> does not decrease)</p><p><b>Merging Stage 2</b></p><p>Identical to Stage 1 except both regions <img src="main_eq05147331747641807187.png" alt="$A$" style="width:8px;height:8px;"> and <img src="main_eq10170753361147586657.png" alt="$B$" style="width:9px;height:8px;"> are <img src="main_eq03977712499502161867.png" alt="$\in N$" style="width:20px;height:9px;"> (<img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> will decrease in size)</p><p>Merging stages 1 and 2 are repeated until no merging occurs in either.</p><p><b>Object Extraction</b></p><p>After merging stops, <img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> merges with <img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;">, therefore all regions are either in <img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;"> or <img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;">. The object is then extracted by using the regions in <img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;"> as a mask on the original image.</p><h2 id="3">Data Sources</h2><div><ul><li>The images and segmentations used are the images used by the authors in the original paper.</li><li>Each image is tested with labels following the original paper and another to test the robustness of the algorithm/implementation</li></ul></div><h2 id="4">Solution</h2><p>Below are snippets of code that come from auxillary functions used in the implementation.</p><p><b>Similarity Calculation</b></p><pre class="language-matlab">h1 = sqrt(regions(rgn1).hist/regions(rgn1).area);
+  </style></head><body><div class="content"><h1>ECE 417 Project: Replication of Maximal Similarity Based Region Merging (MSRM)</h1><!--introduction--><p><i>Hui Wu</i></p><p><i>20515692</i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Problem Formulation</a></li><li><a href="#2">Proposed Solution</a></li><li><a href="#3">Data Sources</a></li><li><a href="#4">Solution</a></li><li><a href="#25">Visualization of Results</a></li><li><a href="#27">Analysis &amp; Conclusions</a></li><li><a href="#28">Source Code</a></li></ul></div><h2 id="1">Problem Formulation</h2><p>One usecase of image segmentation is to separate an object from the background in an image. There are many solutions to segment an image. However, for natural images, full segmentation is often difficult.</p><p>The goal of this method is to use minimally labeled information from a user to merge like regions together.</p><h2 id="2">Proposed Solution</h2><p>To begin, an image and its segmentation is prepared by using an existing segmentation method (in the case of the paper, mean-shift is used).</p><p>Afterwards, the regions are labelled with green or blue lines indicating "object" and "background" segments respectively.</p><p>Using the user labelled data, regions are placed into one of three sets:</p><div><ul><li><img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;"> (Object)</li><li><img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;"> (Background)</li><li><img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> (Unmarked)</li></ul></div><p>Each colour channel is then uniformly quantized into 16 levels (4096 total bins). Then the histogram of each region can be calculated.</p><p>To define a score between adjacent regions, the Bhattacharrya coefficient is used (higher score = higher similarity)</p><p><img src="main_eq10245652828650097980.png" alt="$\rho (A, B) = \sum_{u=1}^{4096} \sqrt{\textrm{Hist}_{A}^{u} \cdot \textrm{Hist}_{B}^{u}}$" style="width:152px;height:15px;"></p><p><b>Merging Stage 1</b></p><p>For every region <img src="main_eq14005776071659101873.png" alt="$A \in M_B$" style="width:38px;height:10px;">, check its adjacent regions, <img src="main_eq13610995001725925283.png" alt="$B \in N$" style="width:32px;height:9px;">. If <img src="main_eq05147331747641807187.png" alt="$A$" style="width:8px;height:8px;"> is the most similar region adjacent to <img src="main_eq10170753361147586657.png" alt="$B$" style="width:9px;height:8px;">, merge the regions. Therefore  <img src="main_eq14005776071659101873.png" alt="$A \in M_B$" style="width:38px;height:10px;">, <img src="main_eq15790362022125325304.png" alt="$B \in M_B$" style="width:39px;height:10px;"></p><p>This process is repeated until no more merging occurs (<img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;"> does not increase and <img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> does not decrease)</p><p><b>Merging Stage 2</b></p><p>Identical to Stage 1 except both regions <img src="main_eq05147331747641807187.png" alt="$A$" style="width:8px;height:8px;"> and <img src="main_eq10170753361147586657.png" alt="$B$" style="width:9px;height:8px;"> are <img src="main_eq03977712499502161867.png" alt="$\in N$" style="width:20px;height:9px;"> (<img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> will decrease in size)</p><p>Merging stages 1 and 2 are repeated until no merging occurs in either.</p><p><b>Object Extraction</b></p><p>After merging stops, <img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> merges with <img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;">, therefore all regions are either in <img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;"> or <img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;">. The object is then extracted by using the regions in <img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;"> as a mask on the original image.</p><h2 id="3">Data Sources</h2><div><ul><li>The images and segmentations used are the images used by the authors in the original paper.</li><li>Each image is tested with labels following the original paper and another to test the robustness of the algorithm/implementation</li></ul></div><h2 id="4">Solution</h2><p>Below are snippets of code that come from auxillary functions used in the implementation.</p><p><b>Similarity Calculation</b></p><p><img src="main_eq10245652828650097980.png" alt="$\rho (A, B) = \sum_{u=1}^{4096} \sqrt{\textrm{Hist}_{A}^{u} \cdot \textrm{Hist}_{B}^{u}}$" style="width:152px;height:15px;"></p><pre class="language-matlab">h1 = sqrt(regions(rgn1).hist/regions(rgn1).area);
 h2 = sqrt(regions(rgn2).hist/regions(rgn2).area);
 </pre><pre class="language-matlab">adjMatrix(rgn1, rgn2) = h1' * h2;
-</pre><p>[talk about markRegions]</p><pre class="language-matlab"><span class="keyword">function</span> [regions, marked] = markRegions(similarities, regions, regionCount, regionType)
+</pre><p>Function used to mark two regions as merged</p><pre class="language-matlab"><span class="keyword">function</span> [regions, marked] = markRegions(similarities, regions, regionCount, regionType)
     marked = 0;
 </pre><pre>     % Get adjacency information
      [i, j, v] = find(similarities);</pre><pre>     % Check adjacency matrix for adjacent regions.
@@ -82,21 +82,20 @@ h2 = sqrt(regions(rgn2).hist/regions(rgn2).area);
              continue;
          end</pre><pre>         max = -1;
          maxIdx = -1;</pre><pre>         % Find the most similar region adjacent to the adjacent region.
-           for l = 1:size(i, 1)
-               if j(l) == i(l)
-                   continue;
-               end</pre><pre>               if j(l) == rgn2 &amp;&amp; v(l) &gt; max
-                   max = v(l);
-                   maxIdx = i(l);
-               end
-           end</pre><pre>           % If the most similar region is our initial region, mark the
-           % regions for merging
-           if rgn1 == maxIdx
-               regions = mark(rgn1, rgn2, regions, regionCount);
-               marked = 1;
-           end
-       end
- end</pre><p><b>Merging Regions</b></p><p>All merged regions have their region index set to the new region index</p><p>Regions have 3 fields that are merged:</p><div><ul><li>hist: the two regions' histograms are summed (element-wise)</li><li>type: the only valid types are 0 or 1 in regions that are merged. Regions of that represent the object (2, Mo) are never merged</li><li>area: the two regions' area are summed</li></ul></div><pre class="language-matlab">idxs = find(imageRegions==j);   <span class="comment">% Find all indices of region j</span>
+         for l = 1:size(i, 1)
+             if j(l) == i(l)
+                 continue;
+             end</pre><pre>             if j(l) == rgn2 &amp;&amp; v(l) &gt; max
+                 max = v(l);
+                 maxIdx = i(l);
+             end
+         end</pre><pre>         % If the most similar region is our initial region, mark the regions for merging
+         if rgn1 == maxIdx
+             regions = mark(rgn1, rgn2, regions, regionCount);
+             marked = 1;
+         end
+     end
+ end</pre><p><b>Merging Regions</b></p><p>All merged regions have their region index set to the new region index</p><p>Regions have 3 fields that are merged:</p><div><ul><li>hist: the two regions' histograms are summed (element-wise)</li><li>type: the only valid types are 0 or 1 in regions that are merged. Regions of that represent the object (2, <img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;">) are never merged</li><li>area: the two regions' area are summed</li></ul></div><pre class="language-matlab">idxs = find(imageRegions==j);   <span class="comment">% Find all indices of region j</span>
 newImageRegions(idxs)=cnt;      <span class="comment">% Populate them with the new region index</span>
 newRegions(cnt).hist = newRegions(cnt).hist + regions(j).hist;
 newRegions(cnt).type = max(newRegions(cnt).type, regions(j).type);
@@ -105,156 +104,154 @@ newRegions(cnt).area = newRegions(cnt).area + regions(j).area;
 </pre><p><b>Constants</b></p><pre class="codeinput">DIRECTORY = <span class="string">'test/'</span>;
 IMG_SUFFIX = <span class="string">'.bmp'</span>;
 SEG_SUFFIX = <span class="string">'_seg.png'</span>;
-MARK_SUFFIX = {<span class="string">'_marked_paper.png'</span>, <span class="string">'_marked_test.png'</span>};
+MARK_SUFFIX = <span class="string">'_marked_paper.png'</span>;
 
 BIN_SIZE = 256/16;   <span class="comment">% 16*16*16 = 4096 bins</span>
 
-<span class="comment">% image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};</span>
-image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</span>, <span class="string">'flower'</span>};
+image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</span>, <span class="string">'flower'</span>, <span class="string">'fruit'</span>, <span class="string">'mona'</span>, <span class="string">'monkey'</span>, <span class="string">'starfish'</span>, <span class="string">'starfish2'</span>, <span class="string">'tiger'</span>, <span class="string">'woman'</span>};
+<span class="comment">% image_names = {'bird', 'dogs', 'flower'};</span>
 </pre><p>Run MSRM segmentation for each image set</p><pre class="codeinput"><span class="keyword">for</span> (name = image_names)
-</pre><pre class="codeinput"><span class="comment">%     for markSuffix = MARK_SUFFIX</span>
-        image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
-        imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
-<span class="comment">%         imageMark = imread(strcat(DIRECTORY, name{1,1}, markSuffix{1,1}));</span>
-        imageMark = imread(strcat(DIRECTORY, name{1,1}, <span class="string">'_marked_paper.png'</span>));
+</pre><pre class="codeinput">    image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
+    imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
+    imageMark = imread(strcat(DIRECTORY, name{1,1}, MARK_SUFFIX));
 
-        h = size(image, 1);
-        w = size(image, 2);
-</pre><p><b>Label Regions</b></p><pre class="codeinput">        labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
-        imageRegions = labeled;
+    h = size(image, 1);
+    w = size(image, 2);
+</pre><p><b>Label Regions</b></p><pre class="codeinput">    labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
+    imageRegions = labeled;
 
-        <span class="comment">% Region boundaries are set to region '0'. Replace these with the value</span>
-        <span class="comment">% of an adjacent region</span>
-        <span class="keyword">while</span> (isempty(find(imageRegions == 0, 1)) == 0)
-           <span class="keyword">for</span> (i = 1:h)
-               <span class="keyword">for</span> (j = 1:w)
-                    <span class="keyword">if</span> (labeled(i, j) == 0)
-                        g = labeled(max(1, i-1):min(h, i+1), max(1, j-1):min(w, j+1));
-                        vals = find(g ~= 0);
+    <span class="comment">% Region boundaries are set to region '0'</span>
+    <span class="comment">% Replace these with the value of an adjacent region</span>
+    <span class="keyword">while</span> (isempty(find(imageRegions == 0, 1)) == 0)
+       <span class="keyword">for</span> (i = 1:h)
+           <span class="keyword">for</span> (j = 1:w)
+                <span class="keyword">if</span> (labeled(i, j) == 0)
+                    g = labeled(max(1, i-1):min(h, i+1), max(1, j-1):min(w, j+1));
+                    vals = find(g ~= 0);
 
-                        <span class="keyword">if</span> (size(vals, 1) &gt; 0)
-                            imageRegions(i, j) = g(vals(1));
-                        <span class="keyword">end</span>
+                    <span class="keyword">if</span> (size(vals, 1) &gt; 0)
+                        imageRegions(i, j) = g(vals(1));
                     <span class="keyword">end</span>
                 <span class="keyword">end</span>
             <span class="keyword">end</span>
-
-            labeled = imageRegions;
         <span class="keyword">end</span>
-</pre><p><b>User Marked Image</b></p><p>Takes a user-marked image and assigns pixels to a set</p><div><ul><li>2: Object (Mo)</li><li>1: Background (Mb)</li></ul></div><pre class="codeinput">        imageMarked = zeros(h, w);
 
-        g = zeros(1,1,3);
-        b = zeros(1,1,3);
+        labeled = imageRegions;
+    <span class="keyword">end</span>
+</pre><p><b>User Marked Image</b></p><p>Takes a user-marked image and assigns pixels to a set</p><div><ul><li>2: Object (<img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;">)</li><li>1: Background (<img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;">)</li></ul></div><pre class="codeinput">    imageMarked = zeros(h, w);
 
-        g(:,:,:) = [0 255 0];   <span class="comment">% Green</span>
-        b(:,:,:) = [0 0 255];   <span class="comment">% Blue</span>
+    g = zeros(1,1,3);
+    b = zeros(1,1,3);
 
-        <span class="keyword">for</span> (i = 1:h)
-            <span class="keyword">for</span> (j = 1:w)
-                <span class="keyword">if</span> (imageMark(i, j, :) == g)
-                    imageMarked(i, j) = 2;
-                <span class="keyword">elseif</span> (imageMark(i, j, :) == b)
-                    imageMarked(i, j) = 1;
-                <span class="keyword">end</span>
+    g(:,:,:) = [0 255 0];   <span class="comment">% Green</span>
+    b(:,:,:) = [0 0 255];   <span class="comment">% Blue</span>
+
+    <span class="keyword">for</span> (i = 1:h)
+        <span class="keyword">for</span> (j = 1:w)
+            <span class="keyword">if</span> (imageMark(i, j, :) == g)
+                imageMarked(i, j) = 2;
+            <span class="keyword">elseif</span> (imageMark(i, j, :) == b)
+                imageMarked(i, j) = 1;
             <span class="keyword">end</span>
         <span class="keyword">end</span>
-</pre><p><b>Image Quantization</b></p><pre class="codeinput">        imageQuantized = size(h, w);
+    <span class="keyword">end</span>
+</pre><p><b>Image Quantization</b></p><pre class="codeinput">    imageQuantized = size(h, w);
 
-        <span class="keyword">for</span> (i = 1:h)
-            <span class="keyword">for</span> (j = 1:w)
-                r = floor(double(image(i, j, 1))/BIN_SIZE);
-                g = floor(double(image(i, j, 2))/BIN_SIZE);
-                b = floor(double(image(i, j, 3))/BIN_SIZE);
+    <span class="keyword">for</span> (i = 1:h)
+        <span class="keyword">for</span> (j = 1:w)
+            r = floor(double(image(i, j, 1))/BIN_SIZE);
+            g = floor(double(image(i, j, 2))/BIN_SIZE);
+            b = floor(double(image(i, j, 3))/BIN_SIZE);
 
-                <span class="comment">% Store each combination (4096) in a unique bin</span>
-                binNumber = r + BIN_SIZE*g + BIN_SIZE*BIN_SIZE*b;
-                imageQuantized(i, j) = max(binNumber, 1);
-            <span class="keyword">end</span>
+            <span class="comment">% Store each combination (4096) in a unique bin</span>
+            binNumber = r + BIN_SIZE*g + BIN_SIZE*BIN_SIZE*b;
+            imageQuantized(i, j) = max(binNumber, 1);
         <span class="keyword">end</span>
-</pre><p><b>Intialize <i>regions</i> Struct Array</b></p><p>Each entry in regions stores properties of a region</p><div><ul><li>Region Type: 0: non-marked (N), 1: background (Mb), 2: object (Mo)</li></ul></div><pre class="codeinput">        regionCount = max(imageRegions(:));
-        binCount = max(imageQuantized(:));
+    <span class="keyword">end</span>
+</pre><p><b>Intialize <i>regions</i> Struct Array</b></p><p>Each entry in regions stores properties of a region</p><div><ul><li>Region Type: 0: non-marked (<img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;">), 1: background (<img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;">), 2: object (<img src="main_eq15958407744728715408.png" alt="$M_O$" style="width:17px;height:10px;">)</li></ul></div><pre class="codeinput">    regionCount = max(imageRegions(:));
+    binCount = max(imageQuantized(:));
 
-        <span class="comment">% Initialize Regions</span>
-        <span class="keyword">for</span> (rgnIdx = 1:regionCount)
-            regions(rgnIdx).stat = 0;   <span class="comment">% Used when marking a region for merging</span>
+    <span class="comment">% Initialize Regions</span>
+    <span class="keyword">for</span> (rgnIdx = 1:regionCount)
+        regions(rgnIdx).stat = 0;   <span class="comment">% Used when marking a region for merging</span>
 
-            regions(rgnIdx).type = 0;
-            regions(rgnIdx).area = 0;
-            regions(rgnIdx).hist = zeros(binCount, 1);
-        <span class="keyword">end</span>
+        regions(rgnIdx).type = 0;
+        regions(rgnIdx).area = 0;
+        regions(rgnIdx).hist = zeros(binCount, 1);
+    <span class="keyword">end</span>
 
-        <span class="comment">% Populate Regions</span>
-        <span class="keyword">for</span> (i = 1:h)
-           <span class="keyword">for</span> (j = 1:w)
-               rgnIdx = imageRegions(i, j);
-               bin    = imageQuantized(i, j);
+    <span class="comment">% Populate Regions</span>
+    <span class="keyword">for</span> (i = 1:h)
+       <span class="keyword">for</span> (j = 1:w)
+           rgnIdx = imageRegions(i, j);
+           bin    = imageQuantized(i, j);
 
-               regions(rgnIdx).hist(bin) = regions(rgnIdx).hist(bin) + 1;
-               regions(rgnIdx).area = regions(rgnIdx).area + 1;
-               regions(rgnIdx).type = max(regions(rgnIdx).type, imageMarked(i, j));
-           <span class="keyword">end</span>
-        <span class="keyword">end</span>
-</pre><p><b>Similarities</b></p><p>Store adjacency information and replace values with a similarity score</p><pre class="codeinput">        adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-        similarities = calculateSimilarities(adjMatrix, regions);
+           regions(rgnIdx).hist(bin) = regions(rgnIdx).hist(bin) + 1;
+           regions(rgnIdx).area = regions(rgnIdx).area + 1;
+           regions(rgnIdx).type = max(regions(rgnIdx).type, imageMarked(i, j));
+       <span class="keyword">end</span>
+    <span class="keyword">end</span>
+</pre><p><b>Similarities</b></p><p>Store adjacency information and replace values with a similarity score</p><pre class="codeinput">    adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+    similarities = calculateSimilarities(adjMatrix, regions);
 
-        <span class="keyword">while</span> 1
-</pre><pre class="codeinput">            merged = 0;
-</pre><p><b>Merging Stage 1</b></p><p>Merge members of Mb (type = 1) with members of N (type = 0)</p><p>Repeat until no merging occurs.</p><pre class="codeinput">            <span class="keyword">while</span> 1
-                [regions, marked] = markRegions(similarities, regions, regionCount, 1);
+    <span class="keyword">while</span> 1
+</pre><pre class="codeinput">        merged = 0;
+</pre><p><b>Merging Stage 1</b></p><p>Merge members of <img src="main_eq02876962836816556869.png" alt="$M_B$" style="width:17px;height:10px;"> (type = 1) with members of <img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"> (type = 0)</p><p>Repeat until no merging occurs.</p><pre class="codeinput">        <span class="keyword">while</span> 1
+            [regions, marked] = markRegions(similarities, regions, regionCount, 1);
 
-                <span class="keyword">if</span> marked == 0
-                    <span class="keyword">break</span>;
-                <span class="keyword">else</span>
-                    merged = 1;
-                <span class="keyword">end</span>
-
-                <span class="comment">% Merge Regions</span>
-                <span class="comment">% After merging, recalculate adjacencies and similarities with remaining regions</span>
-                [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-                adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-                similarities = calculateSimilarities(adjMatrix, regions);
-            <span class="keyword">end</span>
-</pre><p><b>Merging Stage 2</b></p><p>Merge members of N (type = 0) with other members of N</p><p>Repeat until no merging occurs.</p><p>Identical to Stage 1 except we look for type == 0 instead of type == 1</p><pre class="codeinput">            <span class="keyword">while</span> 1
-                [regions, marked] = markRegions(similarities, regions, regionCount, 0);
-
-                <span class="keyword">if</span> marked == 0
-                    <span class="keyword">break</span>;
-                <span class="keyword">else</span>
-                    merged = 1;
-                <span class="keyword">end</span>
-
-                [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-                adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-                similarities = calculateSimilarities(adjMatrix, regions);
-            <span class="keyword">end</span>
-</pre><p><b>Exit Condition</b> If no merging occurs in either stage, merging stage is complete</p><pre class="codeinput">            <span class="keyword">if</span> (merged == 0)
+            <span class="keyword">if</span> marked == 0
                 <span class="keyword">break</span>;
+            <span class="keyword">else</span>
+                merged = 1;
             <span class="keyword">end</span>
-</pre><pre class="codeinput">        <span class="keyword">end</span>
-</pre><p><b>Object Extraction</b></p><pre class="codeinput">        extractionMask = zeros(size(imageRegions));
 
-        <span class="keyword">for</span> (i = 1:regionCount)
-            <span class="keyword">if</span> regions(i).type ~= 1
-                extractionMask(find(imageRegions == i)) = 1;
+            <span class="comment">% Merge Regions</span>
+            [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+
+            <span class="comment">% After merging, recalculate adjacencies and similarities with remaining regions</span>
+            adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+            similarities = calculateSimilarities(adjMatrix, regions);
+        <span class="keyword">end</span>
+</pre><p><b>Merging Stage 2</b></p><p>Merge members of <img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;">(type = 0) with other members of <img src="main_eq03672095713503266041.png" alt="$N$" style="width:10px;height:8px;"></p><p>Repeat until no merging occurs.</p><p>Identical to Stage 1 except we look for type == 0 instead of type == 1</p><pre class="codeinput">        <span class="keyword">while</span> 1
+            [regions, marked] = markRegions(similarities, regions, regionCount, 0);
+
+            <span class="keyword">if</span> marked == 0
+                <span class="keyword">break</span>;
+            <span class="keyword">else</span>
+                merged = 1;
             <span class="keyword">end</span>
+
+            [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+            adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+            similarities = calculateSimilarities(adjMatrix, regions);
         <span class="keyword">end</span>
-
-        idxs = find(extractionMask == 0);
-
-        extractedImage = image;
-
-        <span class="keyword">for</span> (i = 1:3)
-            tmp = extractedImage(:, :, i);
-            tmp(idxs) = 255;
-            extractedImage(:, :, i) = tmp;
+</pre><p><b>Exit Condition</b> If no merging occurs in either stage, merging stage is complete</p><pre class="codeinput">        <span class="keyword">if</span> (merged == 0)
+            <span class="keyword">break</span>;
         <span class="keyword">end</span>
-</pre><h2 id="25">Visualization of Results</h2><pre class="codeinput">        figure;
-        subplot(1, 3, 1); imshow(image);
-        subplot(1, 3, 2); imshow(imageMark);
-        subplot(1, 3, 3); imshow(extractedImage);
-<span class="comment">%     end</span>
-</pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <img vspace="5" hspace="5" src="main_02.png" alt=""> <img vspace="5" hspace="5" src="main_03.png" alt=""> <pre class="codeinput"><span class="keyword">end</span>
-</pre><h2 id="27">Analysis &amp; Conclusions</h2><p>Overall, the algorithm described in the paper works well on most of the test images. Not all the paper's results were perfectly replicated.</p><h2 id="28">Source Code</h2><div><ul><li>all source code and utilized functions are packaged with submission</li><li>utilization of methods from</li></ul></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
+</pre><pre class="codeinput">    <span class="keyword">end</span>
+</pre><p><b>Object Extraction</b></p><pre class="codeinput">    extractionMask = zeros(size(imageRegions));
+
+    <span class="keyword">for</span> (i = 1:regionCount)
+        <span class="keyword">if</span> regions(i).type ~= 1
+            extractionMask(find(imageRegions == i)) = 1;
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    idxs = find(extractionMask == 0);
+
+    extractedImage = image;
+
+    <span class="keyword">for</span> (i = 1:3)
+        tmp = extractedImage(:, :, i);
+        tmp(idxs) = 255;
+        extractedImage(:, :, i) = tmp;
+    <span class="keyword">end</span>
+</pre><h2 id="25">Visualization of Results</h2><pre class="codeinput">    figure;
+    subplot(1, 3, 1); imshow(image);
+    subplot(1, 3, 2); imshow(imageMark);
+    subplot(1, 3, 3); imshow(extractedImage);
+</pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <img vspace="5" hspace="5" src="main_02.png" alt=""> <img vspace="5" hspace="5" src="main_03.png" alt=""> <img vspace="5" hspace="5" src="main_04.png" alt=""> <img vspace="5" hspace="5" src="main_05.png" alt=""> <img vspace="5" hspace="5" src="main_06.png" alt=""> <img vspace="5" hspace="5" src="main_07.png" alt=""> <img vspace="5" hspace="5" src="main_08.png" alt=""> <img vspace="5" hspace="5" src="main_09.png" alt=""> <img vspace="5" hspace="5" src="main_10.png" alt=""> <pre class="codeinput"><span class="keyword">end</span>
+</pre><h2 id="27">Analysis &amp; Conclusions</h2><p><b>Results</b></p><div><ul><li>The algorithm described in the paper works well on most of the test images</li><li>The results of the paper were not replicated with complete accuracy (this could be due to the markers being estimated from the paper) *</li></ul></div><p><b>Conclusions</b></p><div><ul><li>Objects with a high colour variance will require more human markers</li><li>Works best on images where the object is distinct from the background</li><li>Very dependent on the quality of the segmentation algorithm used</li><li>Human markers have to be strategically placed for non monotone objects</li></ul></div><h2 id="28">Source Code</h2><div><ul><li>all source code and utilized functions are packaged with submission</li></ul></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% ECE 417 Project: Replication of Maximal Similarity Based Region Merging (MSRM)
 % _Hui Wu_
@@ -321,8 +318,8 @@ image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</
 % implementation.
 %
 % *Similarity Calculation*
-%
 % 
+% $\rho (A, B) = \sum_{u=1}^{4096} \sqrt{\textrm{Hist}_{A}^{u} \cdot \textrm{Hist}_{B}^{u}}$
 %%
 %   h1 = sqrt(regions(rgn1).hist/regions(rgn1).area);
 %   h2 = sqrt(regions(rgn2).hist/regions(rgn2).area);
@@ -330,7 +327,7 @@ image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</
 %   adjMatrix(rgn1, rgn2) = h1' * h2;
 %
 %%
-% [talk about markRegions]
+% Function used to mark two regions as merged
 %%
 %   function [regions, marked] = markRegions(similarities, regions, regionCount, regionType)
 %       marked = 0;
@@ -354,24 +351,23 @@ image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</
 %           maxIdx = -1;
 %         
 %           % Find the most similar region adjacent to the adjacent region. 
-%             for l = 1:size(i, 1)
-%                 if j(l) == i(l)
-%                     continue;
-%                 end
+%           for l = 1:size(i, 1)
+%               if j(l) == i(l)
+%                   continue;
+%               end
 %             
-%                 if j(l) == rgn2 && v(l) > max
-%                     max = v(l);
-%                     maxIdx = i(l);
-%                 end
-%             end
+%               if j(l) == rgn2 && v(l) > max
+%                   max = v(l);
+%                   maxIdx = i(l);
+%               end
+%           end
 %         
-%             % If the most similar region is our initial region, mark the
-%             % regions for merging
-%             if rgn1 == maxIdx
-%                 regions = mark(rgn1, rgn2, regions, regionCount);
-%                 marked = 1;
-%             end
-%         end
+%           % If the most similar region is our initial region, mark the regions for merging
+%           if rgn1 == maxIdx
+%               regions = mark(rgn1, rgn2, regions, regionCount);
+%               marked = 1;
+%           end
+%       end
 %   end
 %
 %%
@@ -382,7 +378,7 @@ image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</
 % Regions have 3 fields that are merged:
 %
 % * hist: the two regions' histograms are summed (element-wise)
-% * type: the only valid types are 0 or 1 in regions that are merged. Regions of that represent the object (2, Mo) are never merged
+% * type: the only valid types are 0 or 1 in regions that are merged. Regions of that represent the object (2, $M_O$) are never merged
 % * area: the two regions' area are summed
 %%
 %   idxs = find(imageRegions==j);   % Find all indices of region j
@@ -399,219 +395,227 @@ clc; clear; close all;
 DIRECTORY = 'test/';
 IMG_SUFFIX = '.bmp';
 SEG_SUFFIX = '_seg.png';
-MARK_SUFFIX = {'_marked_paper.png', '_marked_test.png'};
+MARK_SUFFIX = '_marked_paper.png';
 
 BIN_SIZE = 256/16;   % 16*16*16 = 4096 bins
 
-% image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
-image_names = {'bird', 'dogs', 'flower'};
+image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
+% image_names = {'bird', 'dogs', 'flower'};
 
 %% 
 % Run MSRM segmentation for each image set
 for (name = image_names)
-%     for markSuffix = MARK_SUFFIX
-        image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
-        imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
-%         imageMark = imread(strcat(DIRECTORY, name{1,1}, markSuffix{1,1}));
-        imageMark = imread(strcat(DIRECTORY, name{1,1}, '_marked_paper.png'));
+    image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
+    imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
+    imageMark = imread(strcat(DIRECTORY, name{1,1}, MARK_SUFFIX));
 
-        h = size(image, 1);
-        w = size(image, 2);
+    h = size(image, 1);
+    w = size(image, 2);
 
-        %% 
-        % *Label Regions*
-        labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
-        imageRegions = labeled;
+    %% 
+    % *Label Regions*
+    labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
+    imageRegions = labeled;
 
-        % Region boundaries are set to region '0'. Replace these with the value
-        % of an adjacent region
-        while (isempty(find(imageRegions == 0, 1)) == 0)
-           for (i = 1:h)
-               for (j = 1:w)
-                    if (labeled(i, j) == 0)
-                        g = labeled(max(1, i-1):min(h, i+1), max(1, j-1):min(w, j+1));
-                        vals = find(g ~= 0);
+    % Region boundaries are set to region '0'
+    % Replace these with the value of an adjacent region
+    while (isempty(find(imageRegions == 0, 1)) == 0)
+       for (i = 1:h)
+           for (j = 1:w)
+                if (labeled(i, j) == 0)
+                    g = labeled(max(1, i-1):min(h, i+1), max(1, j-1):min(w, j+1));
+                    vals = find(g ~= 0);
 
-                        if (size(vals, 1) > 0)
-                            imageRegions(i, j) = g(vals(1));
-                        end
+                    if (size(vals, 1) > 0)
+                        imageRegions(i, j) = g(vals(1));
                     end
                 end
             end
-
-            labeled = imageRegions;
         end
 
-        %%
-        % *User Marked Image*
-        %
-        % Takes a user-marked image and assigns pixels to a set
-        %
-        % * 2: Object (Mo)
-        % * 1: Background (Mb)
-        %
-        imageMarked = zeros(h, w);
+        labeled = imageRegions;
+    end
 
-        g = zeros(1,1,3);
-        b = zeros(1,1,3);
+    %%
+    % *User Marked Image*
+    %
+    % Takes a user-marked image and assigns pixels to a set
+    %
+    % * 2: Object ($M_O$)
+    % * 1: Background ($M_B$)
+    %
+    imageMarked = zeros(h, w);
 
-        g(:,:,:) = [0 255 0];   % Green
-        b(:,:,:) = [0 0 255];   % Blue
+    g = zeros(1,1,3);
+    b = zeros(1,1,3);
 
-        for (i = 1:h)
-            for (j = 1:w)
-                if (imageMark(i, j, :) == g)
-                    imageMarked(i, j) = 2;
-                elseif (imageMark(i, j, :) == b)
-                    imageMarked(i, j) = 1;
-                end
+    g(:,:,:) = [0 255 0];   % Green
+    b(:,:,:) = [0 0 255];   % Blue
+
+    for (i = 1:h)
+        for (j = 1:w)
+            if (imageMark(i, j, :) == g)
+                imageMarked(i, j) = 2;
+            elseif (imageMark(i, j, :) == b)
+                imageMarked(i, j) = 1;
             end
         end
+    end
+
+    %% 
+    % *Image Quantization*
+    imageQuantized = size(h, w);
+
+    for (i = 1:h)
+        for (j = 1:w)
+            r = floor(double(image(i, j, 1))/BIN_SIZE);
+            g = floor(double(image(i, j, 2))/BIN_SIZE);
+            b = floor(double(image(i, j, 3))/BIN_SIZE);
+
+            % Store each combination (4096) in a unique bin
+            binNumber = r + BIN_SIZE*g + BIN_SIZE*BIN_SIZE*b;
+            imageQuantized(i, j) = max(binNumber, 1);
+        end
+    end
+
+    %% 
+    % *Intialize _regions_ Struct Array*
+    %
+    % Each entry in regions stores properties of a region
+    % 
+    % * Region Type: 0: non-marked ($N$), 1: background ($M_B$), 2: object ($M_O$)
+    %
+    regionCount = max(imageRegions(:));    
+    binCount = max(imageQuantized(:));
+
+    % Initialize Regions
+    for (rgnIdx = 1:regionCount)
+        regions(rgnIdx).stat = 0;   % Used when marking a region for merging
+
+        regions(rgnIdx).type = 0;
+        regions(rgnIdx).area = 0;
+        regions(rgnIdx).hist = zeros(binCount, 1);
+    end
+
+    % Populate Regions
+    for (i = 1:h)
+       for (j = 1:w)
+           rgnIdx = imageRegions(i, j);
+           bin    = imageQuantized(i, j);
+
+           regions(rgnIdx).hist(bin) = regions(rgnIdx).hist(bin) + 1;
+           regions(rgnIdx).area = regions(rgnIdx).area + 1;
+           regions(rgnIdx).type = max(regions(rgnIdx).type, imageMarked(i, j));
+       end
+    end
+
+    %%
+    % *Similarities*
+    %
+    % Store adjacency information and replace values with a similarity score
+    adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+    similarities = calculateSimilarities(adjMatrix, regions);
+
+    while 1
+        merged = 0;
 
         %% 
-        % *Image Quantization*
-        imageQuantized = size(h, w);
-
-        for (i = 1:h)
-            for (j = 1:w)
-                r = floor(double(image(i, j, 1))/BIN_SIZE);
-                g = floor(double(image(i, j, 2))/BIN_SIZE);
-                b = floor(double(image(i, j, 3))/BIN_SIZE);
-
-                % Store each combination (4096) in a unique bin
-                binNumber = r + BIN_SIZE*g + BIN_SIZE*BIN_SIZE*b;
-                imageQuantized(i, j) = max(binNumber, 1);
-            end
-        end
-
-        %% 
-        % *Intialize _regions_ Struct Array*
+        % *Merging Stage 1*
         %
-        % Each entry in regions stores properties of a region
-        % 
-        % * Region Type: 0: non-marked (N), 1: background (Mb), 2: object (Mo)
+        % Merge members of $M_B$ (type = 1) with members of $N$ (type = 0)
         %
-        regionCount = max(imageRegions(:));    
-        binCount = max(imageQuantized(:));
-
-        % Initialize Regions
-        for (rgnIdx = 1:regionCount)
-            regions(rgnIdx).stat = 0;   % Used when marking a region for merging
-
-            regions(rgnIdx).type = 0;
-            regions(rgnIdx).area = 0;
-            regions(rgnIdx).hist = zeros(binCount, 1);
-        end
-
-        % Populate Regions
-        for (i = 1:h)
-           for (j = 1:w)
-               rgnIdx = imageRegions(i, j);
-               bin    = imageQuantized(i, j);
-
-               regions(rgnIdx).hist(bin) = regions(rgnIdx).hist(bin) + 1;
-               regions(rgnIdx).area = regions(rgnIdx).area + 1;
-               regions(rgnIdx).type = max(regions(rgnIdx).type, imageMarked(i, j));
-           end
-        end
-
-        %%
-        % *Similarities*
+        % Repeat until no merging occurs.
         %
-        % Store adjacency information and replace values with a similarity
-        % score
-        adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-        similarities = calculateSimilarities(adjMatrix, regions);
-
         while 1
-            merged = 0;
+            [regions, marked] = markRegions(similarities, regions, regionCount, 1);
 
-            %% 
-            % *Merging Stage 1*
-            %
-            % Merge members of Mb (type = 1) with members of N (type = 0)
-            %
-            % Repeat until no merging occurs.
-            while 1
-                [regions, marked] = markRegions(similarities, regions, regionCount, 1);
-
-                if marked == 0
-                    break;
-                else
-                    merged = 1;
-                end
-
-                % Merge Regions
-                % After merging, recalculate adjacencies and similarities with remaining regions
-                [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-                adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-                similarities = calculateSimilarities(adjMatrix, regions);
-            end
-
-            %% 
-            % *Merging Stage 2*
-            %
-            % Merge members of N (type = 0) with other members of N
-            %
-            % Repeat until no merging occurs.
-            %
-            % Identical to Stage 1 except we look for type == 0 instead of type == 1
-            while 1
-                [regions, marked] = markRegions(similarities, regions, regionCount, 0);
-
-                if marked == 0
-                    break;
-                else
-                    merged = 1;
-                end
-
-                [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-                adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-                similarities = calculateSimilarities(adjMatrix, regions);
-            end
-
-            %%
-            % *Exit Condition*
-            % If no merging occurs in either stage, merging stage is complete
-            if (merged == 0)
+            if marked == 0
                 break;
+            else
+                merged = 1;
             end
+
+            % Merge Regions
+            [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+            
+            % After merging, recalculate adjacencies and similarities with remaining regions
+            adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+            similarities = calculateSimilarities(adjMatrix, regions);
         end
 
         %% 
-        % *Object Extraction*
-        extractionMask = zeros(size(imageRegions));
+        % *Merging Stage 2*
+        %
+        % Merge members of $N$(type = 0) with other members of $N$
+        %
+        % Repeat until no merging occurs.
+        %
+        % Identical to Stage 1 except we look for type == 0 instead of type == 1
+        %
+        while 1
+            [regions, marked] = markRegions(similarities, regions, regionCount, 0);
 
-        for (i = 1:regionCount)
-            if regions(i).type ~= 1
-                extractionMask(find(imageRegions == i)) = 1;
+            if marked == 0
+                break;
+            else
+                merged = 1;
             end
+
+            [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+            adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+            similarities = calculateSimilarities(adjMatrix, regions);
         end
 
-        idxs = find(extractionMask == 0);
-
-        extractedImage = image;
-
-        for (i = 1:3)
-            tmp = extractedImage(:, :, i);
-            tmp(idxs) = 255;
-            extractedImage(:, :, i) = tmp;
+        %%
+        % *Exit Condition*
+        % If no merging occurs in either stage, merging stage is complete
+        if (merged == 0)
+            break;
         end
+    end
 
-        %% Visualization of Results
-        figure;
-        subplot(1, 3, 1); imshow(image);
-        subplot(1, 3, 2); imshow(imageMark);
-        subplot(1, 3, 3); imshow(extractedImage);
-%     end
+    %% 
+    % *Object Extraction*
+    extractionMask = zeros(size(imageRegions));
+
+    for (i = 1:regionCount)
+        if regions(i).type ~= 1
+            extractionMask(find(imageRegions == i)) = 1;
+        end
+    end
+
+    idxs = find(extractionMask == 0);
+
+    extractedImage = image;
+
+    for (i = 1:3)
+        tmp = extractedImage(:, :, i);
+        tmp(idxs) = 255;
+        extractedImage(:, :, i) = tmp;
+    end
+
+    %% Visualization of Results
+    figure;
+    subplot(1, 3, 1); imshow(image);
+    subplot(1, 3, 2); imshow(imageMark);
+    subplot(1, 3, 3); imshow(extractedImage);
 end
 
 %% Analysis & Conclusions
-% Overall, the algorithm described in the paper works well on most of the
-% test images. Not all the paper's results were perfectly replicated. 
-
+% *Results*
+%
+% * The algorithm described in the paper works well on most of the test images
+% * The results of the paper were not replicated with complete accuracy (this could be due to the markers being estimated from the paper)
+% * 
+%
+% *Conclusions*
+%
+% * Objects with a high colour variance will require more human markers
+% * Works best on images where the object is distinct from the background
+% * Very dependent on the quality of the segmentation algorithm used
+% * Human markers have to be strategically placed for non monotone objects
+%
 %% Source Code
 % * all source code and utilized functions are packaged with submission
-% * utilization of methods from 
 ##### SOURCE END #####
 --></body></html>
