@@ -105,151 +105,156 @@ newRegions(cnt).area = newRegions(cnt).area + regions(j).area;
 </pre><p><b>Constants</b></p><pre class="codeinput">DIRECTORY = <span class="string">'test/'</span>;
 IMG_SUFFIX = <span class="string">'.bmp'</span>;
 SEG_SUFFIX = <span class="string">'_seg.png'</span>;
-MARK_SUFFIX = <span class="string">'_marked.png'</span>;
+MARK_SUFFIX = {<span class="string">'_marked_paper.png'</span>, <span class="string">'_marked_test.png'</span>};
 
 BIN_SIZE = 256/16;   <span class="comment">% 16*16*16 = 4096 bins</span>
 
-image_names = {<span class="string">'bird'</span>};
+<span class="comment">% image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};</span>
+image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</span>, <span class="string">'flower'</span>};
 </pre><p>Run MSRM segmentation for each image set</p><pre class="codeinput"><span class="keyword">for</span> (name = image_names)
-</pre><pre class="codeinput">    image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
-    imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
-    imageMark = imread(strcat(DIRECTORY, name{1,1}, MARK_SUFFIX));
+</pre><pre class="codeinput"><span class="comment">%     for markSuffix = MARK_SUFFIX</span>
+        image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
+        imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
+<span class="comment">%         imageMark = imread(strcat(DIRECTORY, name{1,1}, markSuffix{1,1}));</span>
+        imageMark = imread(strcat(DIRECTORY, name{1,1}, <span class="string">'_marked_paper.png'</span>));
 
-    h = size(image, 1);
-    w = size(image, 2);
-</pre><p><b>Label Regions</b></p><pre class="codeinput">    labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
-    imageRegions = labeled;
+        h = size(image, 1);
+        w = size(image, 2);
+</pre><p><b>Label Regions</b></p><pre class="codeinput">        labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
+        imageRegions = labeled;
 
-    <span class="comment">% Region boundaries are set to region '0'. Replace these with the value</span>
-    <span class="comment">% of an adjacent region</span>
-    <span class="keyword">while</span> (isempty(find(imageRegions == 0, 1)) == 0)
-       <span class="keyword">for</span> (i = 1:h)
-           <span class="keyword">for</span> (j = 1:w)
-                <span class="keyword">if</span> (labeled(i, j) == 0)
-                    g = labeled(max(1, i-1):min(h, i+1), max(1, j-1):min(w, j+1));
-                    vals = find(g ~= 0);
+        <span class="comment">% Region boundaries are set to region '0'. Replace these with the value</span>
+        <span class="comment">% of an adjacent region</span>
+        <span class="keyword">while</span> (isempty(find(imageRegions == 0, 1)) == 0)
+           <span class="keyword">for</span> (i = 1:h)
+               <span class="keyword">for</span> (j = 1:w)
+                    <span class="keyword">if</span> (labeled(i, j) == 0)
+                        g = labeled(max(1, i-1):min(h, i+1), max(1, j-1):min(w, j+1));
+                        vals = find(g ~= 0);
 
-                    <span class="keyword">if</span> (size(vals, 1) &gt; 0)
-                        imageRegions(i, j) = g(vals(1));
+                        <span class="keyword">if</span> (size(vals, 1) &gt; 0)
+                            imageRegions(i, j) = g(vals(1));
+                        <span class="keyword">end</span>
                     <span class="keyword">end</span>
                 <span class="keyword">end</span>
             <span class="keyword">end</span>
+
+            labeled = imageRegions;
         <span class="keyword">end</span>
+</pre><p><b>User Marked Image</b></p><p>Takes a user-marked image and assigns pixels to a set</p><div><ul><li>2: Object (Mo)</li><li>1: Background (Mb)</li></ul></div><pre class="codeinput">        imageMarked = zeros(h, w);
 
-        labeled = imageRegions;
-    <span class="keyword">end</span>
-</pre><p><b>User Marked Image</b></p><p>Takes a user-marked image and assigns pixels to a set</p><div><ul><li>2: Object (Mo)</li><li>1: Background (Mb)</li></ul></div><pre class="codeinput">    imageMarked = zeros(h, w);
+        g = zeros(1,1,3);
+        b = zeros(1,1,3);
 
-    g = zeros(1,1,3);
-    b = zeros(1,1,3);
+        g(:,:,:) = [0 255 0];   <span class="comment">% Green</span>
+        b(:,:,:) = [0 0 255];   <span class="comment">% Blue</span>
 
-    g(:,:,:) = [0 255 0];   <span class="comment">% Green</span>
-    b(:,:,:) = [0 0 255];   <span class="comment">% Blue</span>
-
-    <span class="keyword">for</span> (i = 1:h)
-        <span class="keyword">for</span> (j = 1:w)
-            <span class="keyword">if</span> (imageMark(i, j, :) == g)
-                imageMarked(i, j) = 2;
-            <span class="keyword">elseif</span> (imageMark(i, j, :) == b)
-                imageMarked(i, j) = 1;
+        <span class="keyword">for</span> (i = 1:h)
+            <span class="keyword">for</span> (j = 1:w)
+                <span class="keyword">if</span> (imageMark(i, j, :) == g)
+                    imageMarked(i, j) = 2;
+                <span class="keyword">elseif</span> (imageMark(i, j, :) == b)
+                    imageMarked(i, j) = 1;
+                <span class="keyword">end</span>
             <span class="keyword">end</span>
         <span class="keyword">end</span>
-    <span class="keyword">end</span>
-</pre><p><b>Image Quantization</b></p><pre class="codeinput">    imageQuantized = size(h, w);
+</pre><p><b>Image Quantization</b></p><pre class="codeinput">        imageQuantized = size(h, w);
 
-    <span class="keyword">for</span> (i = 1:h)
-        <span class="keyword">for</span> (j = 1:w)
-            r = floor(double(image(i, j, 1))/BIN_SIZE);
-            g = floor(double(image(i, j, 2))/BIN_SIZE);
-            b = floor(double(image(i, j, 3))/BIN_SIZE);
+        <span class="keyword">for</span> (i = 1:h)
+            <span class="keyword">for</span> (j = 1:w)
+                r = floor(double(image(i, j, 1))/BIN_SIZE);
+                g = floor(double(image(i, j, 2))/BIN_SIZE);
+                b = floor(double(image(i, j, 3))/BIN_SIZE);
 
-            <span class="comment">% Store each combination (4096) in a unique bin</span>
-            binNumber = r + BIN_SIZE*g + BIN_SIZE*BIN_SIZE*b;
-            imageQuantized(i, j) = max(binNumber, 1);
+                <span class="comment">% Store each combination (4096) in a unique bin</span>
+                binNumber = r + BIN_SIZE*g + BIN_SIZE*BIN_SIZE*b;
+                imageQuantized(i, j) = max(binNumber, 1);
+            <span class="keyword">end</span>
         <span class="keyword">end</span>
-    <span class="keyword">end</span>
-</pre><p><b>Intialize <i>regions</i> Struct Array</b></p><p>Each entry in regions stores properties of a region</p><div><ul><li>Region Type: 0: non-marked (N), 1: background (Mb), 2: object (Mo)</li></ul></div><pre class="codeinput">    regionCount = max(imageRegions(:));
-    binCount = max(imageQuantized(:));
+</pre><p><b>Intialize <i>regions</i> Struct Array</b></p><p>Each entry in regions stores properties of a region</p><div><ul><li>Region Type: 0: non-marked (N), 1: background (Mb), 2: object (Mo)</li></ul></div><pre class="codeinput">        regionCount = max(imageRegions(:));
+        binCount = max(imageQuantized(:));
 
-    <span class="comment">% Initialize Regions</span>
-    <span class="keyword">for</span> (rgnIdx = 1:regionCount)
-        regions(rgnIdx).stat = 0;   <span class="comment">% Used when marking a region for merging</span>
+        <span class="comment">% Initialize Regions</span>
+        <span class="keyword">for</span> (rgnIdx = 1:regionCount)
+            regions(rgnIdx).stat = 0;   <span class="comment">% Used when marking a region for merging</span>
 
-        regions(rgnIdx).type = 0;
-        regions(rgnIdx).area = 0;
-        regions(rgnIdx).hist = zeros(binCount, 1);
-    <span class="keyword">end</span>
+            regions(rgnIdx).type = 0;
+            regions(rgnIdx).area = 0;
+            regions(rgnIdx).hist = zeros(binCount, 1);
+        <span class="keyword">end</span>
 
-    <span class="comment">% Populate Regions</span>
-    <span class="keyword">for</span> (i = 1:h)
-       <span class="keyword">for</span> (j = 1:w)
-           rgnIdx = imageRegions(i, j);
-           bin    = imageQuantized(i, j);
+        <span class="comment">% Populate Regions</span>
+        <span class="keyword">for</span> (i = 1:h)
+           <span class="keyword">for</span> (j = 1:w)
+               rgnIdx = imageRegions(i, j);
+               bin    = imageQuantized(i, j);
 
-           regions(rgnIdx).hist(bin) = regions(rgnIdx).hist(bin) + 1;
-           regions(rgnIdx).area = regions(rgnIdx).area + 1;
-           regions(rgnIdx).type = max(regions(rgnIdx).type, imageMarked(i, j));
-       <span class="keyword">end</span>
-    <span class="keyword">end</span>
-</pre><p><b>Similarities</b></p><p>Store adjacency information and replace values with a similarity score</p><pre class="codeinput">    adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-    similarities = calculateSimilarities(adjMatrix, regions);
+               regions(rgnIdx).hist(bin) = regions(rgnIdx).hist(bin) + 1;
+               regions(rgnIdx).area = regions(rgnIdx).area + 1;
+               regions(rgnIdx).type = max(regions(rgnIdx).type, imageMarked(i, j));
+           <span class="keyword">end</span>
+        <span class="keyword">end</span>
+</pre><p><b>Similarities</b></p><p>Store adjacency information and replace values with a similarity score</p><pre class="codeinput">        adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+        similarities = calculateSimilarities(adjMatrix, regions);
 
-    <span class="keyword">while</span> 1
-</pre><pre class="codeinput">        merged = 0;
-</pre><p><b>Merging Stage 1</b></p><p>Merge members of Mb (type = 1) with members of N (type = 0)</p><p>Repeat until no merging occurs.</p><pre class="codeinput">        <span class="keyword">while</span> 1
-            [regions, marked] = markRegions(similarities, regions, regionCount, 1);
+        <span class="keyword">while</span> 1
+</pre><pre class="codeinput">            merged = 0;
+</pre><p><b>Merging Stage 1</b></p><p>Merge members of Mb (type = 1) with members of N (type = 0)</p><p>Repeat until no merging occurs.</p><pre class="codeinput">            <span class="keyword">while</span> 1
+                [regions, marked] = markRegions(similarities, regions, regionCount, 1);
 
-            <span class="keyword">if</span> marked == 0
+                <span class="keyword">if</span> marked == 0
+                    <span class="keyword">break</span>;
+                <span class="keyword">else</span>
+                    merged = 1;
+                <span class="keyword">end</span>
+
+                <span class="comment">% Merge Regions</span>
+                <span class="comment">% After merging, recalculate adjacencies and similarities with remaining regions</span>
+                [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+                adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+                similarities = calculateSimilarities(adjMatrix, regions);
+            <span class="keyword">end</span>
+</pre><p><b>Merging Stage 2</b></p><p>Merge members of N (type = 0) with other members of N</p><p>Repeat until no merging occurs.</p><p>Identical to Stage 1 except we look for type == 0 instead of type == 1</p><pre class="codeinput">            <span class="keyword">while</span> 1
+                [regions, marked] = markRegions(similarities, regions, regionCount, 0);
+
+                <span class="keyword">if</span> marked == 0
+                    <span class="keyword">break</span>;
+                <span class="keyword">else</span>
+                    merged = 1;
+                <span class="keyword">end</span>
+
+                [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+                adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+                similarities = calculateSimilarities(adjMatrix, regions);
+            <span class="keyword">end</span>
+</pre><p><b>Exit Condition</b> If no merging occurs in either stage, merging stage is complete</p><pre class="codeinput">            <span class="keyword">if</span> (merged == 0)
                 <span class="keyword">break</span>;
-            <span class="keyword">else</span>
-                merged = 1;
             <span class="keyword">end</span>
+</pre><pre class="codeinput">        <span class="keyword">end</span>
+</pre><p><b>Object Extraction</b></p><pre class="codeinput">        extractionMask = zeros(size(imageRegions));
 
-            <span class="comment">% Merge Regions</span>
-            <span class="comment">% After merging, recalculate adjacencies and similarities with remaining regions</span>
-            [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-            adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-            similarities = calculateSimilarities(adjMatrix, regions);
-        <span class="keyword">end</span>
-</pre><p><b>Merging Stage 2</b></p><p>Merge members of N (type = 0) with other members of N</p><p>Repeat until no merging occurs.</p><p>Identical to Stage 1 except we look for type == 0 instead of type == 1</p><pre class="codeinput">        <span class="keyword">while</span> 1
-            [regions, marked] = markRegions(similarities, regions, regionCount, 0);
-
-            <span class="keyword">if</span> marked == 0
-                <span class="keyword">break</span>;
-            <span class="keyword">else</span>
-                merged = 1;
+        <span class="keyword">for</span> (i = 1:regionCount)
+            <span class="keyword">if</span> regions(i).type ~= 1
+                extractionMask(find(imageRegions == i)) = 1;
             <span class="keyword">end</span>
-
-            [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-            adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-            similarities = calculateSimilarities(adjMatrix, regions);
         <span class="keyword">end</span>
-</pre><p><b>Exit Condition</b> If no merging occurs in either stage, merging stage is complete</p><pre class="codeinput">        <span class="keyword">if</span> (merged == 0)
-            <span class="keyword">break</span>;
+
+        idxs = find(extractionMask == 0);
+
+        extractedImage = image;
+
+        <span class="keyword">for</span> (i = 1:3)
+            tmp = extractedImage(:, :, i);
+            tmp(idxs) = 255;
+            extractedImage(:, :, i) = tmp;
         <span class="keyword">end</span>
-</pre><pre class="codeinput">    <span class="keyword">end</span>
-</pre><p><b>Object Extraction</b></p><pre class="codeinput">    extractionMask = zeros(size(imageRegions));
-
-    <span class="keyword">for</span> (i = 1:regionCount)
-        <span class="keyword">if</span> regions(i).type ~= 1
-            extractionMask(find(imageRegions == i)) = 1;
-        <span class="keyword">end</span>
-    <span class="keyword">end</span>
-
-    idxs = find(extractionMask == 0);
-
-    extractedImage = image;
-
-    <span class="keyword">for</span> (i = 1:3)
-        tmp = extractedImage(:, :, i);
-        tmp(idxs) = 255;
-        extractedImage(:, :, i) = tmp;
-    <span class="keyword">end</span>
-</pre><h2 id="25">Visualization of Results</h2><pre class="codeinput">    figure; subplot(2,2,1); imshow(image);
-    figure; subplot(2,2,2); imshow(imageMark);
-    figure; subplot(2,2,3); imshow(extractedImage);
+</pre><h2 id="25">Visualization of Results</h2><pre class="codeinput">        figure;
+        subplot(1, 3, 1); imshow(image);
+        subplot(1, 3, 2); imshow(imageMark);
+        subplot(1, 3, 3); imshow(extractedImage);
+<span class="comment">%     end</span>
 </pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <img vspace="5" hspace="5" src="main_02.png" alt=""> <img vspace="5" hspace="5" src="main_03.png" alt=""> <pre class="codeinput"><span class="keyword">end</span>
-</pre><h2 id="27">Analysis &amp; Conclusions</h2><p>[talk about results, limits etc]</p><h2 id="28">Source Code</h2><p>[list functions]</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
+</pre><h2 id="27">Analysis &amp; Conclusions</h2><p>Overall, the algorithm described in the paper works well on most of the test images. Not all the paper's results were perfectly replicated.</p><h2 id="28">Source Code</h2><div><ul><li>all source code and utilized functions are packaged with submission</li><li>utilization of methods from</li></ul></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% ECE 417 Project: Replication of Maximal Similarity Based Region Merging (MSRM)
 % _Hui Wu_
@@ -394,212 +399,219 @@ clc; clear; close all;
 DIRECTORY = 'test/';
 IMG_SUFFIX = '.bmp';
 SEG_SUFFIX = '_seg.png';
-MARK_SUFFIX = '_marked.png';
+MARK_SUFFIX = {'_marked_paper.png', '_marked_test.png'};
 
 BIN_SIZE = 256/16;   % 16*16*16 = 4096 bins
 
-image_names = {'bird'};
+% image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
+image_names = {'bird', 'dogs', 'flower'};
 
 %% 
 % Run MSRM segmentation for each image set
 for (name = image_names)
-    image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
-    imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
-    imageMark = imread(strcat(DIRECTORY, name{1,1}, MARK_SUFFIX));
+%     for markSuffix = MARK_SUFFIX
+        image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
+        imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
+%         imageMark = imread(strcat(DIRECTORY, name{1,1}, markSuffix{1,1}));
+        imageMark = imread(strcat(DIRECTORY, name{1,1}, '_marked_paper.png'));
 
-    h = size(image, 1);
-    w = size(image, 2);
+        h = size(image, 1);
+        w = size(image, 2);
 
-    %% 
-    % *Label Regions*
-    labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
-    imageRegions = labeled;
+        %% 
+        % *Label Regions*
+        labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
+        imageRegions = labeled;
 
-    % Region boundaries are set to region '0'. Replace these with the value
-    % of an adjacent region
-    while (isempty(find(imageRegions == 0, 1)) == 0)
-       for (i = 1:h)
-           for (j = 1:w)
-                if (labeled(i, j) == 0)
-                    g = labeled(max(1, i-1):min(h, i+1), max(1, j-1):min(w, j+1));
-                    vals = find(g ~= 0);
-                   
-                    if (size(vals, 1) > 0)
-                        imageRegions(i, j) = g(vals(1));
+        % Region boundaries are set to region '0'. Replace these with the value
+        % of an adjacent region
+        while (isempty(find(imageRegions == 0, 1)) == 0)
+           for (i = 1:h)
+               for (j = 1:w)
+                    if (labeled(i, j) == 0)
+                        g = labeled(max(1, i-1):min(h, i+1), max(1, j-1):min(w, j+1));
+                        vals = find(g ~= 0);
+
+                        if (size(vals, 1) > 0)
+                            imageRegions(i, j) = g(vals(1));
+                        end
                     end
                 end
             end
-        end
-       
-        labeled = imageRegions;
-    end
 
-    %%
-    % *User Marked Image*
-    %
-    % Takes a user-marked image and assigns pixels to a set
-    %
-    % * 2: Object (Mo)
-    % * 1: Background (Mb)
-    %
-    imageMarked = zeros(h, w);
-    
-    g = zeros(1,1,3);
-    b = zeros(1,1,3);
-    
-    g(:,:,:) = [0 255 0];   % Green
-    b(:,:,:) = [0 0 255];   % Blue
-    
-    for (i = 1:h)
-        for (j = 1:w)
-            if (imageMark(i, j, :) == g)
-                imageMarked(i, j) = 2;
-            elseif (imageMark(i, j, :) == b)
-                imageMarked(i, j) = 1;
-            end
-        end
-    end
-    
-    %% 
-    % *Image Quantization*
-    imageQuantized = size(h, w);
-
-    for (i = 1:h)
-        for (j = 1:w)
-            r = floor(double(image(i, j, 1))/BIN_SIZE);
-            g = floor(double(image(i, j, 2))/BIN_SIZE);
-            b = floor(double(image(i, j, 3))/BIN_SIZE);
-
-            % Store each combination (4096) in a unique bin
-            binNumber = r + BIN_SIZE*g + BIN_SIZE*BIN_SIZE*b;
-            imageQuantized(i, j) = max(binNumber, 1);
-        end
-    end
-
-    %% 
-    % *Intialize _regions_ Struct Array*
-    %
-    % Each entry in regions stores properties of a region
-    % 
-    % * Region Type: 0: non-marked (N), 1: background (Mb), 2: object (Mo)
-    %
-    regionCount = max(imageRegions(:));    
-    binCount = max(imageQuantized(:));
-    
-    % Initialize Regions
-    for (rgnIdx = 1:regionCount)
-        regions(rgnIdx).stat = 0;   % Used when marking a region for merging
-        
-        regions(rgnIdx).type = 0;
-        regions(rgnIdx).area = 0;
-        regions(rgnIdx).hist = zeros(binCount, 1);
-    end
-    
-    % Populate Regions
-    for (i = 1:h)
-       for (j = 1:w)
-           rgnIdx = imageRegions(i, j);
-           bin    = imageQuantized(i, j);
-           
-           regions(rgnIdx).hist(bin) = regions(rgnIdx).hist(bin) + 1;
-           regions(rgnIdx).area = regions(rgnIdx).area + 1;
-           regions(rgnIdx).type = max(regions(rgnIdx).type, imageMarked(i, j));
-       end
-    end
-    
-    %%
-    % *Similarities*
-    %
-    % Store adjacency information and replace values with a similarity
-    % score
-    adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-    similarities = calculateSimilarities(adjMatrix, regions);
-    
-    while 1
-        merged = 0;
-
-        %% 
-        % *Merging Stage 1*
-        %
-        % Merge members of Mb (type = 1) with members of N (type = 0)
-        %
-        % Repeat until no merging occurs.
-        while 1
-            [regions, marked] = markRegions(similarities, regions, regionCount, 1);
-
-            if marked == 0
-                break;
-            else
-                merged = 1;
-            end
-
-            % Merge Regions
-            % After merging, recalculate adjacencies and similarities with remaining regions
-            [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-            adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-            similarities = calculateSimilarities(adjMatrix, regions);
-        end
-
-        %% 
-        % *Merging Stage 2*
-        %
-        % Merge members of N (type = 0) with other members of N
-        %
-        % Repeat until no merging occurs.
-        %
-        % Identical to Stage 1 except we look for type == 0 instead of type == 1
-        while 1
-            [regions, marked] = markRegions(similarities, regions, regionCount, 0);
-
-            if marked == 0
-                break;
-            else
-                merged = 1;
-            end
-
-            [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
-            adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
-            similarities = calculateSimilarities(adjMatrix, regions);
+            labeled = imageRegions;
         end
 
         %%
-        % *Exit Condition*
-        % If no merging occurs in either stage, merging stage is complete
-        if (merged == 0)
-            break;
+        % *User Marked Image*
+        %
+        % Takes a user-marked image and assigns pixels to a set
+        %
+        % * 2: Object (Mo)
+        % * 1: Background (Mb)
+        %
+        imageMarked = zeros(h, w);
+
+        g = zeros(1,1,3);
+        b = zeros(1,1,3);
+
+        g(:,:,:) = [0 255 0];   % Green
+        b(:,:,:) = [0 0 255];   % Blue
+
+        for (i = 1:h)
+            for (j = 1:w)
+                if (imageMark(i, j, :) == g)
+                    imageMarked(i, j) = 2;
+                elseif (imageMark(i, j, :) == b)
+                    imageMarked(i, j) = 1;
+                end
+            end
         end
-    end
-    
-    %% 
-    % *Object Extraction*
-    extractionMask = zeros(size(imageRegions));
 
-    for (i = 1:regionCount)
-        if regions(i).type ~= 1
-            extractionMask(find(imageRegions == i)) = 1;
+        %% 
+        % *Image Quantization*
+        imageQuantized = size(h, w);
+
+        for (i = 1:h)
+            for (j = 1:w)
+                r = floor(double(image(i, j, 1))/BIN_SIZE);
+                g = floor(double(image(i, j, 2))/BIN_SIZE);
+                b = floor(double(image(i, j, 3))/BIN_SIZE);
+
+                % Store each combination (4096) in a unique bin
+                binNumber = r + BIN_SIZE*g + BIN_SIZE*BIN_SIZE*b;
+                imageQuantized(i, j) = max(binNumber, 1);
+            end
         end
-    end
 
-    idxs = find(extractionMask == 0);
+        %% 
+        % *Intialize _regions_ Struct Array*
+        %
+        % Each entry in regions stores properties of a region
+        % 
+        % * Region Type: 0: non-marked (N), 1: background (Mb), 2: object (Mo)
+        %
+        regionCount = max(imageRegions(:));    
+        binCount = max(imageQuantized(:));
 
-    extractedImage = image;
-    
-    for (i = 1:3)
-        tmp = extractedImage(:, :, i);
-        tmp(idxs) = 255;
-        extractedImage(:, :, i) = tmp;
-    end
+        % Initialize Regions
+        for (rgnIdx = 1:regionCount)
+            regions(rgnIdx).stat = 0;   % Used when marking a region for merging
 
-    %% Visualization of Results
-    figure; subplot(2,2,1); imshow(image);
-    figure; subplot(2,2,2); imshow(imageMark);
-    figure; subplot(2,2,3); imshow(extractedImage);
+            regions(rgnIdx).type = 0;
+            regions(rgnIdx).area = 0;
+            regions(rgnIdx).hist = zeros(binCount, 1);
+        end
+
+        % Populate Regions
+        for (i = 1:h)
+           for (j = 1:w)
+               rgnIdx = imageRegions(i, j);
+               bin    = imageQuantized(i, j);
+
+               regions(rgnIdx).hist(bin) = regions(rgnIdx).hist(bin) + 1;
+               regions(rgnIdx).area = regions(rgnIdx).area + 1;
+               regions(rgnIdx).type = max(regions(rgnIdx).type, imageMarked(i, j));
+           end
+        end
+
+        %%
+        % *Similarities*
+        %
+        % Store adjacency information and replace values with a similarity
+        % score
+        adjMatrix    = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+        similarities = calculateSimilarities(adjMatrix, regions);
+
+        while 1
+            merged = 0;
+
+            %% 
+            % *Merging Stage 1*
+            %
+            % Merge members of Mb (type = 1) with members of N (type = 0)
+            %
+            % Repeat until no merging occurs.
+            while 1
+                [regions, marked] = markRegions(similarities, regions, regionCount, 1);
+
+                if marked == 0
+                    break;
+                else
+                    merged = 1;
+                end
+
+                % Merge Regions
+                % After merging, recalculate adjacencies and similarities with remaining regions
+                [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+                adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+                similarities = calculateSimilarities(adjMatrix, regions);
+            end
+
+            %% 
+            % *Merging Stage 2*
+            %
+            % Merge members of N (type = 0) with other members of N
+            %
+            % Repeat until no merging occurs.
+            %
+            % Identical to Stage 1 except we look for type == 0 instead of type == 1
+            while 1
+                [regions, marked] = markRegions(similarities, regions, regionCount, 0);
+
+                if marked == 0
+                    break;
+                else
+                    merged = 1;
+                end
+
+                [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+                adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
+                similarities = calculateSimilarities(adjMatrix, regions);
+            end
+
+            %%
+            % *Exit Condition*
+            % If no merging occurs in either stage, merging stage is complete
+            if (merged == 0)
+                break;
+            end
+        end
+
+        %% 
+        % *Object Extraction*
+        extractionMask = zeros(size(imageRegions));
+
+        for (i = 1:regionCount)
+            if regions(i).type ~= 1
+                extractionMask(find(imageRegions == i)) = 1;
+            end
+        end
+
+        idxs = find(extractionMask == 0);
+
+        extractedImage = image;
+
+        for (i = 1:3)
+            tmp = extractedImage(:, :, i);
+            tmp(idxs) = 255;
+            extractedImage(:, :, i) = tmp;
+        end
+
+        %% Visualization of Results
+        figure;
+        subplot(1, 3, 1); imshow(image);
+        subplot(1, 3, 2); imshow(imageMark);
+        subplot(1, 3, 3); imshow(extractedImage);
+%     end
 end
 
 %% Analysis & Conclusions
-% [talk about results, limits etc]
+% Overall, the algorithm described in the paper works well on most of the
+% test images. Not all the paper's results were perfectly replicated. 
 
 %% Source Code
-% [list functions]
+% * all source code and utilized functions are packaged with submission
+% * utilization of methods from 
 ##### SOURCE END #####
 --></body></html>
