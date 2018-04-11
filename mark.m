@@ -1,11 +1,16 @@
 % Marks regions for merging
 function newRegions = mark(i, j, regions, regionCount)
+    % Choose smaller region index as the 'base' for merging
     if (i > j)
         [j, i] = deal(i, j);
     end
 
     newRegions = regions;
     
+    % Current status of a region, i
+    % = 0: i is unmerged
+    % < 0: Other regions are marked to merge into i (base)
+    % = j: i is marked to merge into region j (merged)
     i_s = regions(i).stat;
     j_s = regions(j).stat;
     

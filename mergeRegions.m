@@ -4,6 +4,7 @@ function [newImageRegions, cnt, newRegions] = mergeRegions(imageRegions, regionC
     
     cnt = 0;
     
+    % Regions that do not have a 'stat' field <=0 are regions that will be merged.
     for (i = 1:regionCount)
         if regions(i).stat <= 0
             cnt = cnt + 1;
@@ -16,6 +17,7 @@ function [newImageRegions, cnt, newRegions] = mergeRegions(imageRegions, regionC
             newRegions(cnt).hist = regions(i).hist;
             newRegions(cnt).type = regions(i).type;
             newRegions(cnt).area = regions(i).area;
+            
             newRegions(cnt).stat = 0;
             
             % Merge marked regions
