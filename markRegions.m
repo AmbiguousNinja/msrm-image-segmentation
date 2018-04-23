@@ -35,7 +35,14 @@ function [regions, marked] = markRegions(similarities, regions, regionCount, reg
         % If the most similar region is our initial region, mark the
         % regions for merging
         if rgn1 == maxIdx
-            regions = mark(rgn1, rgn2, regions, regionCount);
+            % Choose smaller region index as the 'base' for merging
+            if (rgn1 > rgn2)
+                [rgn2, rgn1] = deal(rgn1, rgn2);
+            end
+            
+            regions(rgn1).stat = -1;
+            regions(rgn2).stat = rgn1;
+            
             marked = 1;
         end
     end

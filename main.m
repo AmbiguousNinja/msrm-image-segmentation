@@ -161,7 +161,7 @@ for (name = image_names)
 
     %% 
     % *Label Regions*
-    labeled = bwlabel(imbinarize(imageSeg(:,:,1))); % Labels connected components in a 2D image
+    labeled = bwlabel(imbinarize(imageSeg(:,:,1))); % Labels connected components in a 2D binary image
     imageRegions = labeled;
 
     % Region boundaries are set to region '0'
@@ -237,11 +237,10 @@ for (name = image_names)
 
     % Initialize Regions
     for (rgnIdx = 1:regionCount)
-        regions(rgnIdx).stat = 0;   % Used when marking a region for merging
-
-        regions(rgnIdx).type = 0;
-        regions(rgnIdx).area = 0;
-        regions(rgnIdx).hist = zeros(binCount, 1);
+        regions(rgnIdx).stat = 0;   % Used to mark a region for merging
+        regions(rgnIdx).type = 0;   % Region type
+        regions(rgnIdx).area = 0;   % Area/pixels of a region
+        regions(rgnIdx).hist = zeros(binCount, 1);  % Histogram of a region
     end
 
     % Populate Regions
@@ -357,6 +356,8 @@ end
 %
 % * The algorithm described in the paper works well on most of the test images
 % * The results of the paper were not replicated with complete accuracy (this could be due to the markers being estimated from the paper)
+% * At first, some images were working very poorly (tiger.bmp for example). In the paper, these images appear to only have object markers but in more detailed markups, the background markers exist as the perimeter of the image
+% * This shows that some images work fairly poorly without a significant amount of human input
 %
 % *Conclusions*
 %
