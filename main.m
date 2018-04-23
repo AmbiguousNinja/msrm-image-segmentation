@@ -142,7 +142,7 @@ clc; clear; close all;
 DIRECTORY = 'test/';
 IMG_SUFFIX = '.bmp';
 SEG_SUFFIX = '_seg.png';
-MARK_SUFFIX = '_marked_paper.png';
+MARK_SUFFIX = '_marked_test.png';
 
 BIN_SIZE = 256/16;   % 16*16*16 = 4096 bins
 
@@ -288,6 +288,8 @@ for (name = image_names)
             % After merging, recalculate adjacencies and similarities with remaining regions
             adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
             similarities = calculateSimilarities(adjMatrix, regions);
+            
+            size(adjMatrix)
         end
 
         %% 
