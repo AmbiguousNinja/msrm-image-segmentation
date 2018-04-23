@@ -13,7 +13,7 @@
 
 %% Proposed Solution
 % To begin, an image and its segmentation is prepared by using an existing
-% segmentation method (in the case of the paper, mean-shift is used).
+% segmentation method (in the case of the paper, mean-shift is used). 
 %
 % Afterwards, the regions are labelled with green or blue lines indicating
 % "object" and "background" segments respectively.
@@ -57,10 +57,10 @@
 %% Data Sources
 % * The images and segmentations used are the images used by the authors in the original paper.
 % * Each image is tested with labels following the original paper and another to test the robustness of the algorithm/implementation
+% * The labels are estimated from the labels used in the paper (manually labelled with a photo editing application)
 %
 %% Solution
-% Below are snippets of code that come from auxillary functions used in the
-% implementation.
+% Below are snippets of code that come from auxillary functions used in the implementation.
 %
 % *Similarity Calculation*
 % 
@@ -72,9 +72,7 @@
 %   adjMatrix(rgn1, rgn2) = h1' * h2;
 %
 %%
-% Function used to mark two regions as "to be merged"
-%
-% mark() will always choose the region with a lower id as the base for merging. This way, when we iterate through each region in order, we will hit the 
+% Marking Regions to Merge
 %%
 %   function [regions, marked] = markRegions(similarities, regions, regionCount, regionType)
 %       marked = 0;
@@ -111,7 +109,14 @@
 %         
 %           % If the most similar region is our initial region, mark the regions for merging
 %           if rgn1 == maxIdx
-%               regions = mark(rgn1, rgn2, regions, regionCount);
+%               % Choose smaller region index as the 'base' for merging
+%               if (rgn1 > rgn2)
+%                   [rgn2, rgn1] = deal(rgn1, rgn2);
+%               end
+%             
+%               regions(rgn1).stat = -1;
+%               regions(rgn2).stat = rgn1;
+%             
 %               marked = 1;
 %           end
 %       end
@@ -124,15 +129,15 @@
 %
 % Regions have 3 fields that are merged:
 %
-% * hist: the two regions' histograms are summed (element-wise)
+% * hist: the two regions' histograms are summed
 % * type: the only valid types are 0 or 1 in regions that are merged. Regions of that represent the object (2, $M_O$) are never merged
 % * area: the two regions' area are summed
 %%
-%   idxs = find(imageRegions==j);   % Find all indices of region j
-%   newImageRegions(idxs)=cnt;      % Populate them with the new region index
-%   newRegions(cnt).hist = newRegions(cnt).hist + regions(j).hist;
-%   newRegions(cnt).type = max(newRegions(cnt).type, regions(j).type);
-%   newRegions(cnt).area = newRegions(cnt).area + regions(j).area;
+%   idxs = find(imageRegions == j);   % Find all indices of region j
+%   newImageRegions(idxs) = cnt;      % Populate them with the new region index
+%   newRegions(cnt).hist  = newRegions(cnt).hist + regions(j).hist;
+%   newRegions(cnt).type  = max(newRegions(cnt).type, regions(j).type);
+%   newRegions(cnt).area  = newRegions(cnt).area + regions(j).area;
 %% 
 % *Housekeeping*
 clc; clear; close all;
@@ -146,11 +151,12 @@ MARK_SUFFIX = '_marked.png';
 
 BIN_SIZE = 256/16;   % 16*16*16 = 4096 bins
 
-% image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
-image_names = {'bird', 'tiger'};
+image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman', 'girl'};
+% image_names = {'bird', 'tiger', 'mona'};    % Test subset
+% image_names = {'girl'};    % Test subset
 
 %% 
-% Run MSRM segmentation for each image set
+% Run MSRM segmentation for each image
 for (name = image_names)
     image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
     imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
@@ -196,8 +202,8 @@ for (name = image_names)
     g = zeros(1,1,3);
     b = zeros(1,1,3);
 
-    g(:,:,:) = [0 255 0];   % Green
-    b(:,:,:) = [0 0 255];   % Blue
+    g(:,:,:) = [0 255 0];   % Green (object marker)
+    b(:,:,:) = [0 0 255];   % Blue (background marker)
 
     for (i = 1:h)
         for (j = 1:w)
@@ -273,16 +279,16 @@ for (name = image_names)
         % Repeat until no merging occurs.
         %
         while 1
-            [regions, marked] = markRegions(similarities, regions, regionCount, 1);
+            [regions, marked] = markRegions(similarities, regions, 1);
 
             if marked == 0
                 break;
-            else
-                merged = 1;
             end
-
+            
             % Merge Regions
             [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+            
+            merged = 1;
             
             % After merging, recalculate adjacencies and similarities with remaining regions
             adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
@@ -299,16 +305,16 @@ for (name = image_names)
         % Identical to Stage 1 except we look for type == 0 instead of type == 1
         %
         while 1
-            [regions, marked] = markRegions(similarities, regions, regionCount, 0);
+            [regions, marked] = markRegions(similarities, regions, 0);
 
             if marked == 0
                 break;
-            else
-                merged = 1;
             end
             
             % Merge Regions
             [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+            
+            merged = 1;
             
             % After merging, recalculate adjacencies and similarities with remaining regions
             adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
@@ -356,7 +362,7 @@ end
 %
 % * The algorithm described in the paper works well on most of the test images
 % * The results of the paper were not replicated with complete accuracy (this could be due to the markers being estimated from the paper)
-% * At first, some images were working very poorly (tiger.bmp for example). In the paper, these images appear to only have object markers but in more detailed markups, the background markers exist as the perimeter of the image
+% * At first, some images were working very poorly (tiger.bmp for example). In the paper, these images appear to only have object markers but in more detailed markups, the background markers exist along an edge of the image
 % * This shows that some images work fairly poorly without a significant amount of human input
 %
 % *Conclusions*
@@ -366,5 +372,13 @@ end
 % * Very dependent on the quality of the segmentation algorithm used
 % * Human markers have to be strategically placed for non monotone objects
 %
+% *Improvements and Notes*
+% 
+% * In Table 1 of the original paper, the authors list the runtime of the algorithm on a few images. Images ranged
+%
 %% Source Code
 % * all source code and utilized functions are packaged with submission
+% * calculateSimilarities.m
+% * createAdjacencyMatrix.m (Modified version of source by Peter Koveski (from the ECE 417 course resources))
+% * markRegions.m
+% * mergeRegions.m

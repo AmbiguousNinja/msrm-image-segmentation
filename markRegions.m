@@ -1,5 +1,5 @@
 % Mark regions for merging
-function [regions, marked] = markRegions(similarities, regions, regionCount, regionType)
+function [regions, marked] = markRegions(similarities, regions, regionType)
     marked = 0;
     
     % Get adjacency information
@@ -32,8 +32,7 @@ function [regions, marked] = markRegions(similarities, regions, regionCount, reg
             end
         end
         
-        % If the most similar region is our initial region, mark the
-        % regions for merging
+        % If the most similar region is our initial region, mark the regions for merging
         if rgn1 == maxIdx
             % Choose smaller region index as the 'base' for merging
             if (rgn1 > rgn2)
