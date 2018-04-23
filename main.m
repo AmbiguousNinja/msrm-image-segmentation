@@ -72,7 +72,9 @@
 %   adjMatrix(rgn1, rgn2) = h1' * h2;
 %
 %%
-% Function used to mark two regions as merged
+% Function used to mark two regions as "to be merged"
+%
+% mark() will always choose the region with a lower id as the base for merging. This way, when we iterate through each region in order, we will hit the 
 %%
 %   function [regions, marked] = markRegions(similarities, regions, regionCount, regionType)
 %       marked = 0;
@@ -144,8 +146,8 @@ MARK_SUFFIX = '_marked_paper.png';
 
 BIN_SIZE = 256/16;   % 16*16*16 = 4096 bins
 
-image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
-% image_names = {'bird', 'dogs', 'flower'};
+% image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
+image_names = {'bird', 'dogs', 'flower'};
 
 %% 
 % Run MSRM segmentation for each image set
@@ -159,7 +161,7 @@ for (name = image_names)
 
     %% 
     % *Label Regions*
-    labeled = bwlabel(imbinarize(imageSeg(:,:,1)));
+    labeled = bwlabel(imbinarize(imageSeg(:,:,1))); % Labels connected components in a 2D image
     imageRegions = labeled;
 
     % Region boundaries are set to region '0'
@@ -305,14 +307,18 @@ for (name = image_names)
             else
                 merged = 1;
             end
-
+            
+            % Merge Regions
             [imageRegions, regionCount, regions] = mergeRegions(imageRegions, regionCount, regions);
+            
+            % After merging, recalculate adjacencies and similarities with remaining regions
             adjMatrix = createAdjacencyMatrix(imageRegions, regions, regionCount, h, w);
             similarities = calculateSimilarities(adjMatrix, regions);
         end
 
         %%
         % *Exit Condition*
+        %
         % If no merging occurs in either stage, merging stage is complete
         if (merged == 0)
             break;
@@ -351,7 +357,6 @@ end
 %
 % * The algorithm described in the paper works well on most of the test images
 % * The results of the paper were not replicated with complete accuracy (this could be due to the markers being estimated from the paper)
-% * 
 %
 % *Conclusions*
 %
