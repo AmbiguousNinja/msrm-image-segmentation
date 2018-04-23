@@ -72,54 +72,48 @@
 %   adjMatrix(rgn1, rgn2) = h1' * h2;
 %
 %%
-% Marking Regions to Merge
+% *Marking Regions to Merge* (markRegions.m)
 %%
-%   function [regions, marked] = markRegions(similarities, regions, regionCount, regionType)
-%       marked = 0;
+%   % Get adjacency information
+%   [i, j, v] = find(similarities);
 %     
-%       % Get adjacency information
-%       [i, j, v] = find(similarities);
-%     
-%       % Check adjacency matrix for adjacent regions.
-%       for k = 1:size(i, 1)
-%           rgn1 = i(k);
-%           rgn2 = j(k);
+%   % Check adjacency matrix for adjacent regions.
+%   for k = 1:size(i, 1)
+%       rgn1 = i(k);
+%       rgn2 = j(k);
 %         
-%           % If the region is not in our desired set, 'regionType' or the
-%           % adjacent region is not in the unmarked set (N), skip this set of
-%           % regions.
-%           if (regions(rgn1).type ~= regionType || rgn1 == rgn2 || regions(rgn2).type ~= 0)
-%               continue;
-%           end
-%         
-%           max = -1;
-%           maxIdx = -1;
-%         
-%           % Find the most similar region adjacent to the adjacent region. 
-%           for l = 1:size(i, 1)
-%               if j(l) == i(l)
-%                   continue;
-%               end
-%             
-%               if j(l) == rgn2 && v(l) > max
-%                   max = v(l);
-%                   maxIdx = i(l);
-%               end
-%           end
-%         
-%           % If the most similar region is our initial region, mark the regions for merging
-%           if rgn1 == maxIdx
-%               % Choose smaller region index as the 'base' for merging
-%               if (rgn1 > rgn2)
-%                   [rgn2, rgn1] = deal(rgn1, rgn2);
-%               end
-%             
-%               regions(rgn1).stat = -1;
-%               regions(rgn2).stat = rgn1;
-%             
-%               marked = 1;
-%           end
+%   % If the region is not in our desired set, 'regionType' or the
+%   % adjacent region is not in the unmarked set (N), skip this set of regions.
+%   if (regions(rgn1).type ~= regionType || rgn1 == rgn2 || regions(rgn2).type ~= 0)
+%       continue;
+%   end
+% 
+%   max = -1;
+%   maxIdx = -1;
+% 
+%   % Find the most similar region adjacent to the adjacent region. 
+%   for l = 1:size(i, 1)
+%       if j(l) == i(l)
+%           continue;
 %       end
+% 
+%       if j(l) == rgn2 && v(l) > max
+%           max = v(l);
+%           maxIdx = i(l);
+%       end
+%   end
+% 
+%   % If the most similar region is our initial region, mark the regions for merging
+%   if rgn1 == maxIdx
+%       % Choose smaller region index as the 'base' for merging
+%       if (rgn1 > rgn2)
+%           [rgn2, rgn1] = deal(rgn1, rgn2);
+%       end
+% 
+%       regions(rgn1).stat = -1;
+%       regions(rgn2).stat = rgn1;
+% 
+%       marked = 1;
 %   end
 %
 %%
@@ -372,9 +366,12 @@ end
 % * Very dependent on the quality of the segmentation algorithm used
 % * Human markers have to be strategically placed for non monotone objects
 %
-% *Improvements and Notes*
-% 
-% * In Table 1 of the original paper, the authors list the runtime of the algorithm on a few images. Images ranged
+% *Notes, Etc*
+%
+% * The original paper lists a TPR and FPR (True, False Positive Rates) which compare the number of correctly labeled pixels against the ground truth
+% * Values of TPR are roughly around 95% while FPR is <1%.
+% * Without a convenient means to get a count of object pixels in the ground truth, FPR and TPR were roughly estimated visually
+% * This implementation has roughly the same TPR and FPR
 %
 %% Source Code
 % * all source code and utilized functions are packaged with submission
