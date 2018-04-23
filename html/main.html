@@ -108,8 +108,8 @@ MARK_SUFFIX = <span class="string">'_marked_paper.png'</span>;
 
 BIN_SIZE = 256/16;   <span class="comment">% 16*16*16 = 4096 bins</span>
 
-<span class="comment">% image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};</span>
-image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</span>, <span class="string">'flower'</span>};
+image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</span>, <span class="string">'flower'</span>, <span class="string">'fruit'</span>, <span class="string">'mona'</span>, <span class="string">'monkey'</span>, <span class="string">'starfish'</span>, <span class="string">'starfish2'</span>, <span class="string">'tiger'</span>, <span class="string">'woman'</span>};
+<span class="comment">% image_names = {'bird', 'dogs', 'flower'};</span>
 </pre><p>Run MSRM segmentation for each image set</p><pre class="codeinput"><span class="keyword">for</span> (name = image_names)
 </pre><pre class="codeinput">    image     = imread(strcat(DIRECTORY, name{1,1}, IMG_SUFFIX));
     imageSeg  = imread(strcat(DIRECTORY, name{1,1}, SEG_SUFFIX));
@@ -253,7 +253,7 @@ image_names = {<span class="string">'bird'</span>, <span class="string">'dogs'</
     subplot(1, 3, 1); imshow(image);
     subplot(1, 3, 2); imshow(imageMark);
     subplot(1, 3, 3); imshow(extractedImage);
-</pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <img vspace="5" hspace="5" src="main_02.png" alt=""> <img vspace="5" hspace="5" src="main_03.png" alt=""> <pre class="codeinput"><span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <img vspace="5" hspace="5" src="main_02.png" alt=""> <img vspace="5" hspace="5" src="main_03.png" alt=""> <img vspace="5" hspace="5" src="main_04.png" alt=""> <img vspace="5" hspace="5" src="main_05.png" alt=""> <img vspace="5" hspace="5" src="main_06.png" alt=""> <img vspace="5" hspace="5" src="main_07.png" alt=""> <img vspace="5" hspace="5" src="main_08.png" alt=""> <img vspace="5" hspace="5" src="main_09.png" alt=""> <img vspace="5" hspace="5" src="main_10.png" alt=""> <pre class="codeinput"><span class="keyword">end</span>
 </pre><h2 id="27">Analysis &amp; Conclusions</h2><p><b>Results</b></p><div><ul><li>The algorithm described in the paper works well on most of the test images</li><li>The results of the paper were not replicated with complete accuracy (this could be due to the markers being estimated from the paper)</li></ul></div><p><b>Conclusions</b></p><div><ul><li>Objects with a high colour variance will require more human markers</li><li>Works best on images where the object is distinct from the background</li><li>Very dependent on the quality of the segmentation algorithm used</li><li>Human markers have to be strategically placed for non monotone objects</li></ul></div><h2 id="28">Source Code</h2><div><ul><li>all source code and utilized functions are packaged with submission</li></ul></div><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% ECE 417 Project: Replication of Maximal Similarity Based Region Merging (MSRM)
@@ -404,8 +404,8 @@ MARK_SUFFIX = '_marked_paper.png';
 
 BIN_SIZE = 256/16;   % 16*16*16 = 4096 bins
 
-% image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
-image_names = {'bird', 'dogs', 'flower'};
+image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
+% image_names = {'bird', 'dogs', 'flower'};
 
 %% 
 % Run MSRM segmentation for each image set

@@ -147,7 +147,7 @@ MARK_SUFFIX = '_marked_paper.png';
 BIN_SIZE = 256/16;   % 16*16*16 = 4096 bins
 
 % image_names = {'bird', 'dogs', 'flower', 'fruit', 'mona', 'monkey', 'starfish', 'starfish2', 'tiger', 'woman'};
-image_names = {'bird', 'dogs', 'flower'};
+image_names = {'bird', 'tiger'};
 
 %% 
 % Run MSRM segmentation for each image set
