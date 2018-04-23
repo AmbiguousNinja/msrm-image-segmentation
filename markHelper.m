@@ -1,4 +1,4 @@
-% Helper function for marking regions to merge
+% Updates regions marked for merging into region j with region i
 function newRegions = markHelper(i, j, regions, regionCount)
     newRegions = regions;
     newRegions(j).stat = i;
